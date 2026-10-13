@@ -18,7 +18,7 @@
   :root{
     --bg:#050c16;
     --blue:#2f6fed;
-    --teal:#17c1a0;
+    --teal:#7aa7ff;
     --green:#3ddc84;
     --violet:#5b4fd8;
     --ink:#0d1526;
@@ -54,7 +54,7 @@
     background:
       radial-gradient(45% 35% at 20% 15%, var(--teal), transparent 60%),
       radial-gradient(40% 40% at 82% 8%, var(--blue), transparent 60%),
-      radial-gradient(50% 40% at 50% 95%, var(--green), transparent 60%);
+      radial-gradient(50% 40% at 50% 95%, var(--blue), transparent 60%);
     animation: auroraShift 24s ease-in-out infinite alternate;
   }
   body::after{
@@ -111,7 +111,7 @@
     padding:8px 16px; border-radius:999px; cursor:pointer; transition:.15s;
   }
   .day-tabs button.active, .day-tabs button:hover{
-    background:linear-gradient(120deg, var(--green), var(--teal)); color:#04101f; border-color:transparent;
+    background:linear-gradient(120deg, #1d4ed8, var(--blue)); color:#fff; border-color:transparent;
   }
 
   .card{
@@ -140,16 +140,16 @@
   .rodizio-toolbar{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px;}
   .btn{
     font-family:var(--font-display); font-weight:600; font-size:.9rem; border:none; border-radius:10px;
-    padding:11px 20px; cursor:pointer; color:#04101f;
-    background:linear-gradient(120deg, var(--green), var(--teal) 60%, var(--blue));
-    box-shadow:0 10px 24px -8px rgba(30,190,150,.55); transition:.15s transform;
+    padding:11px 20px; cursor:pointer; color:#fff;
+    background:linear-gradient(120deg, #1d4ed8, var(--blue));
+    box-shadow:0 10px 24px -8px rgba(47,111,237,.35); transition:.15s transform;
   }
   .btn:hover{ transform:translateY(-1px); }
   .btn.ghost{ background:#fff; color:#1b2a3a; border:1px solid #c8d3dc; box-shadow:none; }
 
   .rodizio-grids{display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:22px;}
   .area-title{font-family:var(--font-display); font-size:1rem; display:inline-flex; align-items:center; gap:8px; padding:5px 14px; border-radius:8px; margin-bottom:12px;}
-  .area-title.cvp{ background:rgba(23,193,160,.12); color:#0b7a63; border-left:4px solid var(--teal); }
+  .area-title.cvp{ background:rgba(47,111,237,.12); color:#1c4fb0; border-left:4px solid var(--teal); }
   .area-title.cvu{ background:rgba(47,111,237,.12); color:#1c4fb0; border-left:4px solid var(--blue); }
 
   table.rodizio{ width:100%; border-collapse:collapse; font-size:.9rem; }
@@ -181,7 +181,7 @@
 
   .area-badge, .setor-badge{ font-size:.72rem; padding:2px 9px; border-radius:999px; font-family:var(--font-display); font-weight:600; background:#eef4f8; color:#33506b; border:1px solid #d7e2ea; }
   .factory-badge{ font-size:.72rem; padding:2px 9px; border-radius:999px; font-family:var(--font-display); font-weight:600; }
-  .factory-badge.cvp{ background:rgba(23,193,160,.15); color:#0b7a63; border:1px solid rgba(23,193,160,.4); }
+  .factory-badge.cvp{ background:rgba(47,111,237,.15); color:#1c4fb0; border:1px solid rgba(47,111,237,.4); }
   .factory-badge.cvu{ background:rgba(47,111,237,.15); color:#1c4fb0; border:1px solid rgba(47,111,237,.4); }
 
   .ausentes-panel{ margin-top:26px; }
@@ -302,14 +302,14 @@
     .topbar-actions{ width:100%; }
   }
 
-  .efficiency-card{background:linear-gradient(135deg,#f7fbff,#eefbf6);border:1px solid #d7e8e2;border-radius:14px;padding:14px 16px;margin-bottom:18px;box-shadow:0 10px 24px -20px rgba(0,0,0,.45)}
+  .efficiency-card{background:linear-gradient(135deg,#f7fbff,#edf3ff);border:1px solid #d7e2f0;border-radius:14px;padding:14px 16px;margin-bottom:18px;box-shadow:0 10px 24px -20px rgba(0,0,0,.45)}
   .efficiency-row{display:grid;grid-template-columns:150px 1fr 58px;gap:12px;align-items:center;margin:7px 0;font-size:.82rem}
   .efficiency-track{height:10px;background:#dde7ed;border-radius:999px;overflow:hidden}
   .efficiency-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--red),var(--amber) 45%,var(--green) 75%,var(--teal));transition:width .35s ease}
   .efficiency-value{font-family:var(--font-mono);font-weight:800;text-align:right;color:#173b57}
   .turn-head{min-width:105px}.turn-eff{display:block;font-size:.62rem;text-transform:none;letter-spacing:0;margin-top:4px;color:#506b82;font-family:var(--font-body)}
   table.rodizio th.turn-0,table.rodizio td.turn-0{background:rgba(47,111,237,.035)}
-  table.rodizio th.turn-1,table.rodizio td.turn-1{background:rgba(23,193,160,.045)}
+  table.rodizio th.turn-1,table.rodizio td.turn-1{background:rgba(47,111,237,.045)}
   table.rodizio th.turn-2,table.rodizio td.turn-2{background:rgba(255,204,51,.055)}
   /* Status sempre prevalecem sobre as cores suaves das colunas */
   table.rodizio td.cell.ausente{background:#e5484d!important;color:#fff!important;font-weight:800}
@@ -318,7 +318,7 @@
 
   .dashboard-head{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}.dashboard-head h2{margin-bottom:6px}
   .dashboard-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}.dashboard-grid .stacked-card{margin-top:22px}
-  .bar-chart{display:grid;gap:9px;max-height:520px;overflow:auto;padding-right:5px}.bar-row{display:grid;grid-template-columns:minmax(75px,130px) 1fr 42px;gap:10px;align-items:center;font-size:.78rem}.bar-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bar-track{height:12px;background:#e6edf2;border-radius:999px;overflow:hidden}.bar-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--teal),var(--green));border-radius:999px}.bar-value{text-align:right;font-family:var(--font-mono);font-weight:700}
+  .bar-chart{display:grid;gap:9px;max-height:520px;overflow:auto;padding-right:5px}.bar-row{display:grid;grid-template-columns:minmax(75px,130px) 1fr 42px;gap:10px;align-items:center;font-size:.78rem}.bar-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bar-track{height:12px;background:#e6edf2;border-radius:999px;overflow:hidden}.bar-fill{height:100%;background:linear-gradient(90deg,#1d4ed8,var(--teal));border-radius:999px}.bar-value{text-align:right;font-family:var(--font-mono);font-weight:700}
   .post-week-list{display:grid;gap:10px;margin-top:14px}.post-week-item{padding:12px 14px;border:1px solid #e2eaf0;border-radius:12px;background:#fff}.post-week-item strong{font-family:var(--font-mono);color:#0d3b66}.post-week-names{font-size:.82rem;color:#4f6679;margin-top:5px}
   .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.metric-card{padding:16px;border-radius:14px;background:#f5f9fc;border:1px solid #e1e9ef}.metric-number{font:800 1.5rem var(--font-display);color:#0d3b66}.metric-label{font-size:.76rem;color:#5b7185;margin-top:4px}
   .install-banner,.update-banner{position:fixed;z-index:100;left:50%;transform:translateX(-50%);bottom:22px;width:min(680px,calc(100% - 28px));display:flex;align-items:center;gap:14px;background:rgba(7,18,34,.96);color:#fff;border:1px solid rgba(255,255,255,.18);box-shadow:0 18px 55px rgba(0,0,0,.45);border-radius:16px;padding:13px 14px}.install-banner.hidden,.update-banner.hidden{display:none}.install-banner div{flex:1;display:flex;flex-direction:column;gap:3px}.install-banner span{font-size:.75rem;color:#b8cada}.install-close{border:0;background:transparent;color:#fff;font-size:1rem;cursor:pointer}
@@ -367,7 +367,7 @@
       </div>
       <div id="day-efficiency"></div>
       <div class="rodizio-grids" id="rodizio-grids"></div>
-      <p class="crit-hint">🟢 Verde · 🟡 Amarelo · 🔴 Vermelho — classificação do posto · 🔒 vaga travada por Formação/Reposição · <b style="color:#d93636">Ausente</b> · <b style="color:#6d35c5">Empréstimo</b> · <b style="color:#8a6d00">Sênior</b></p>
+      <p class="crit-hint">Máximo de um posto pesado por operador por dia. 🟢 Verde · 🟡 Amarelo · 🔴 Vermelho — classificação do posto · 🔒 vaga travada por Formação/Reposição · <b style="color:#d93636">Ausente</b> · <b style="color:#6d35c5">Empréstimo</b> · <b style="color:#8a6d00">Sênior</b></p>
       <div class="ausentes-panel">
         <h3>Ausentes</h3>
         <p class="hint-small">Remover um ausente não desfaz substituições já feitas — gere novamente se precisar reverter.</p>
@@ -384,7 +384,7 @@
         </div>
       </div>
     </div>
-    <p class="footnote">Criado por: Thiago Vaz - LB14762</p>
+    <p class="footnote">Criado por: Thiago Vaz - LB14762 e Sony Montana</p>
   </main>
 
   <main id="page-dashboard" class="page">
@@ -414,7 +414,7 @@
       <input type="text" id="dashboard-post-search" class="search-box" placeholder="Buscar posto...">
       <div id="dashboard-post-details" class="post-week-list"></div>
     </section>
-    <p class="footnote">Criado por: Thiago Vaz - LB14762</p>
+    <p class="footnote">Criado por: Thiago Vaz - LB14762 e Sony Montana</p>
   </main>
 
   <main id="page-formacao" class="page">
@@ -450,7 +450,7 @@
       <p class="hint-small">Aplicadas de segunda a sexta, travadas no posto e turno escolhidos — não mudam nem ao gerar o rodízio automaticamente.</p>
       <div id="lista-formacoes" class="list-container"></div>
     </section>
-    <p class="footnote">Criado por: Thiago Vaz - LB14762</p>
+    <p class="footnote">Criado por: Thiago Vaz - LB14762 e Sony Montana</p>
   </main>
 
   <main id="page-cadastro" class="page">
@@ -506,7 +506,7 @@
       </form>
       <div class="setor-chips-preview" id="setor-chips-preview" style="margin-top:16px;"></div>
     </section>
-    <p class="footnote">Criado por: Thiago Vaz - LB14762</p>
+    <p class="footnote">Criado por: Thiago Vaz - LB14762 e Sony Montana</p>
   </main>
 
   <main id="page-listas" class="page">
@@ -527,7 +527,7 @@
       <input type="text" id="search-setor" class="search-box" placeholder="Buscar setor...">
       <div id="lista-setores" class="list-container"></div>
     </section>
-    <p class="footnote">Criado por: Thiago Vaz - LB14762</p>
+    <p class="footnote">Criado por: Thiago Vaz - LB14762 e Sony Montana</p>
   </main>
 
   <main id="page-backup" class="page">
@@ -540,6 +540,12 @@
         <input type="file" id="input-backup-completo-import" accept="application/json" style="display:none;">
       </div>
     </div>
+    <section class="card stacked-card">
+      <h2>Cadastro da tabela enviada</h2>
+      <p class="hint-small">23 operadores. Em formação, fora da geração automática: Cleber / 12D, Willian / 01C, Alexandre / 06D e Daiane / 7E. KIT2 de Daiane confirmado. As criticidades dos postos já cadastrados serão preservadas.</p>
+      <p class="hint-small">Aplicar este cadastro substitui os cadastros e limpa rodízios, ausências, formações e reposições atuais. Primeiro será baixado um backup completo.</p>
+      <button class="btn" id="btn-aplicar-tabela">Aplicar cadastro da tabela</button>
+    </section>
     <section class="card stacked-card">
       <h2>Backup do Rodízio</h2>
       <p class="hint-small">Salva só rodízio, ausências e formações travadas — não mexe no cadastro de funcionários, postos ou setores.</p>
@@ -559,7 +565,7 @@
       </div>
     </section>
     <p class="hint-small" style="margin-top:20px;">Toda alteração já fica salva automaticamente neste navegador — esses backups servem para guardar uma cópia à parte, transferir para outro computador ou voltar a uma versão anterior.</p>
-    <p class="footnote">Criado por: Thiago Vaz - LB14762</p>
+    <p class="footnote">Criado por: Thiago Vaz - LB14762 e Sony Montana</p>
   </main>
 
   <p class="footnote">Alterações são salvas automaticamente neste navegador. Use a aba Backup para guardar uma cópia à parte ou transferir para outro computador.</p>
@@ -597,14 +603,14 @@
   var DEFAULT_EPIS = ['Sapato de segurança','Casquete','Protetor auricular','Óculos de proteção','Luva anticorte'];
 
   var seedSetores = [
-    {id:'s0', name:'SC5', factory:'CVP'},
-    {id:'s1', name:'MOX', factory:'CVP'}
+    {id:'s0', name:'MOX', factory:'CVP'},
+    {id:'s1', name:'SC5', factory:'CVP'}
   ];
 
   var seedPostDefs = [
-    ['01A','s0'],['01C','s0'],['KIT1','s0'],['KIT2','s0'],['KIT4','s0'],
+    ['01A','s0'],['01C','s0'],['KIT1','s1'],['KIT2','s1'],['KIT4','s1'],
     ['03E','s0'],['04E','s0'],['05D','s0'],['06D','s0'],['07D','s0'],
-    ['07E','s0'],['08D','s0'],['11D','s0'],['12D','s0'],
+    ['07E','s0'],['08D','s0'],['11D','s1'],['12D','s1'],
     ['1E','s1'],['4D','s1'],['4E','s1'],['5D','s1'],['5E','s1'],
     ['6D','s1'],['6E','s1'],['7E','s1'],['7D','s1']
   ];
@@ -617,30 +623,242 @@
   }
 
   var seedEmployeeDefs = [
-    ['Anderson',['01A','12D','5E','4E']],
-    ['Alexandre',['01A','1E','6D']],
-    ['Lucas',['01A','12D','5D','5E']],
-    ['Gabriel',['01C','05D','4E','04E']],
-    ['Sony',['01C','05D','7E','01A','4D']],
-    ['Julio',['01C','04E','4E','7D']],
-    ['Willian',['KIT1','KIT2','KIT4']],
-    ['Daiane',['KIT1','KIT2','7D']],
-    ['Aline',['KIT1','07D','6E']],
-    ['Cleber',['KIT2','KIT4','08D']],
-    ['Fabio A',['KIT4','04E','4D','08D']],
-    ['Santiago',['03E','1E','7E']],
-    ['Thiago H',['03E','7E','7D','01C']],
-    ['Nelson',['03E','07E','5E','12D','4E']],
-    ['Eduardo',['04E','07D','07E','4E']],
-    ['Fabio M',['05D','08D','1E','6D']],
-    ['Tamara',['06D','07D','6D']],
-    ['Thiago',['06D','6D','6E','4D']],
-    ['Joyce',['06D','11D','6E','7D']],
-    ['Luiz',['07E','4D','5D']],
-    ['Marcelo',['08D','4D','5E']],
-    ['Thainá',['11D','12D','5D']],
-    ['Cristiano',['11D','4E','7D','6E','7E']]
-  ];
+  [
+    "Anderson",
+    [
+      "01A",
+      "12D",
+      "4E",
+      "5E",
+      "5D"
+    ]
+  ],
+  [
+    "Gabriel",
+    [
+      "01C",
+      "05D",
+      "04E",
+      "4E"
+    ]
+  ],
+  [
+    "Milene",
+    [
+      "KIT1",
+      "6E",
+      "11D"
+    ]
+  ],
+  [
+    "Cleber",
+    [
+      "KIT1",
+      "KIT2",
+      "KIT4",
+      "08D"
+    ]
+  ],
+  [
+    "Willian",
+    [
+      "KIT1",
+      "KIT2",
+      "KIT4"
+    ]
+  ],
+  [
+    "Nelson",
+    [
+      "03E",
+      "04E",
+      "05D",
+      "06D",
+      "07D",
+      "07E",
+      "11D",
+      "12D",
+      "4E",
+      "5E",
+      "5D"
+    ]
+  ],
+  [
+    "Fabio A",
+    [
+      "KIT4",
+      "04E",
+      "08D",
+      "4D"
+    ]
+  ],
+  [
+    "Fabio M",
+    [
+      "05D",
+      "08D",
+      "1E",
+      "4E",
+      "6D"
+    ]
+  ],
+  [
+    "Thiago",
+    [
+      "KIT4",
+      "06D",
+      "07D",
+      "08D",
+      "1E",
+      "4D",
+      "6D",
+      "7D",
+      "6E"
+    ]
+  ],
+  [
+    "Tamara",
+    [
+      "KIT2",
+      "06D",
+      "07D",
+      "6D"
+    ]
+  ],
+  [
+    "Luiz",
+    [
+      "07E",
+      "06D",
+      "07D",
+      "11D",
+      "4D",
+      "5D",
+      "5E",
+      "6E",
+      "6D"
+    ]
+  ],
+  [
+    "Marcelo",
+    [
+      "08D",
+      "03E",
+      "4D",
+      "5E"
+    ]
+  ],
+  [
+    "Joyce",
+    [
+      "06D",
+      "11D",
+      "6E",
+      "7D"
+    ]
+  ],
+  [
+    "Thainá",
+    [
+      "11D",
+      "12D",
+      "1E",
+      "5D",
+      "7E"
+    ]
+  ],
+  [
+    "Santiago",
+    [
+      "03E",
+      "1E",
+      "4D",
+      "7E",
+      "7D"
+    ]
+  ],
+  [
+    "Sony",
+    [
+      "01A",
+      "01C",
+      "05D",
+      "4D",
+      "6D",
+      "7D",
+      "7E"
+    ]
+  ],
+  [
+    "Eduardo",
+    [
+      "04E",
+      "06D",
+      "07D",
+      "08D",
+      "1E",
+      "4E"
+    ]
+  ],
+  [
+    "Lucas",
+    [
+      "01A",
+      "01C",
+      "KIT4",
+      "7E",
+      "11D",
+      "12D",
+      "1E",
+      "5E",
+      "5D"
+    ]
+  ],
+  [
+    "Alan",
+    [
+      "08D",
+      "5E",
+      "6D"
+    ]
+  ],
+  [
+    "Alexandre",
+    [
+      "01A",
+      "1E",
+      "6D",
+      "08D"
+    ]
+  ],
+  [
+    "Julio",
+    [
+      "01C",
+      "04E",
+      "4E",
+      "6E",
+      "6D",
+      "7D"
+    ]
+  ],
+  [
+    "Daiane",
+    [
+      "KIT1",
+      "KIT2",
+      "7D"
+    ]
+  ],
+  [
+    "Bruno",
+    [
+      "01A",
+      "01C",
+      "5D"
+    ]
+  ]
+];
   var seedEmployees = seedEmployeeDefs.map(function(def, i){
     var postIds = def[1].map(function(n){ var p=findPostByName(n); return p?p.id:null; }).filter(Boolean);
     return {id:'f'+i, name:def[0], postIds:postIds};
@@ -659,59 +877,7 @@
   };
   DAYS.forEach(function(d){ state.absentees[d.id] = [null,null,null,null,null,null]; state.reposicoes[d.id] = []; });
 
-  (function seedScheduleFromImages(){
-    function findEmployeeByName(name){
-      return state.employees.filter(function(e){ return e.name===name; })[0];
-    }
-    function buildSchedule(data){
-      var sched = {};
-      state.posts.forEach(function(p){ sched[p.id] = new Array(3).fill(null); });
-      Object.keys(data).forEach(function(postName){
-        var post = findPostByName(postName);
-        if(!post) return;
-        data[postName].forEach(function(empName, col){
-          var emp = findEmployeeByName(empName);
-          sched[post.id][col] = emp ? emp.id : null;
-        });
-      });
-      return sched;
-    }
-    var terca = {
-      '01A':['Anderson','Alexandre','Lucas'], '01C':['Gabriel','Sony','Julio'],
-      'KIT1':['Willian','Daiane','Aline'], 'KIT2':['Daiane','Cleber','Willian'],
-      'KIT4':['Fabio A','Willian','Cleber'], '03E':['Santiago','Thiago H','Nelson'],
-      '04E':['Julio','Eduardo','Fabio A'], '05D':['Fabio M','Gabriel','Sony'],
-      '06D':['Tamara','Thiago','Joyce'], '07D':['Eduardo','Aline','Tamara'],
-      '07E':['Nelson','Luiz','Eduardo'], '08D':['Cleber','Marcelo','Fabio M'],
-      '11D':['Joyce','Thainá','Cristiano'], '12D':['Lucas','Anderson','Thainá'],
-      '1E':['Alexandre','Fabio M','Santiago'], '4D':['Luiz','Fabio A','Marcelo'],
-      '4E':['Cristiano','Julio','Gabriel'], '5D':['Thainá','Lucas','Luiz'],
-      '5E':['Marcelo','Nelson','Anderson'], '6D':['Thiago','Tamara','Alexandre'],
-      '6E':['Aline','Joyce','Thiago'], '7E':['Sony','Santiago','Thiago H'],
-      '7D':['Thiago H','Cristiano','Daiane']
-    };
-    var segunda = {
-      '01A':['Anderson','Alexandre','Sony'], '01C':['Julio','Gabriel','Thiago H'],
-      'KIT1':['Aline','Daiane','Willian'], 'KIT2':['Cleber','Willian','Daiane'],
-      'KIT4':['Willian','Fabio A','Cleber'], '03E':['Nelson','Thiago H','Santiago'],
-      '04E':['Gabriel','Julio','Fabio A'], '05D':['Fabio M','Sony','Gabriel'],
-      '06D':['Joyce','Thiago','Tamara'], '07D':['Tamara','Aline','Eduardo'],
-      '07E':['Luiz','Eduardo','Luiz'], '08D':['Fabio A','Cleber','Marcelo'],
-      '11D':['Cristiano','Thainá','Joyce'], '12D':['Thainá','Nelson','Lucas'],
-      '1E':['Santiago','Fabio M','Alexandre'], '4D':['Sony','Marcelo','Thiago'],
-      '4E':['Eduardo','Anderson','Nelson'], '5D':['Lucas','Luiz','Thainá'],
-      '5E':['Marcelo','Lucas','Anderson'], '6D':['Alexandre','Tamara','Fabio M'],
-      '6E':['Thiago','Cristiano','Aline'], '7E':['Thiago H','Santiago','Cristiano'],
-      '7D':['Daiane','Joyce','Julio']
-    };
-    var schedTerca = buildSchedule(terca);
-    var schedSegunda = buildSchedule(segunda);
-    state.schedule['terca'] = schedTerca;
-    state.schedule['quinta'] = JSON.parse(JSON.stringify(schedTerca));
-    state.schedule['segunda'] = schedSegunda;
-    state.schedule['quarta'] = JSON.parse(JSON.stringify(schedSegunda));
-    state.schedule['sexta'] = JSON.parse(JSON.stringify(schedSegunda));
-  })();
+  DAYS.forEach(function(d){ state.schedule[d.id] = emptyStructureFor(d.id); });
 
   var currentDay = 'segunda';
   var counters = {f:0, p:0, s:0, fo:0};
@@ -893,7 +1059,7 @@
           // Assim cada dia continua buscando seu melhor resultado individual.
           var prevOccupant = col>0 ? resolveOccupant(sched[post.id][col-1]) : null;
           if(prevOccupant===e.id) return true;
-          if(post.criticidade==='vermelho' && col>0 && redInCol[col-1][e.id]) return true;
+          if(post.criticidade==='vermelho' && (dayRed[e.id]||0)>=1) return true;
           return false;
         }
         function candidatesFor(post){
@@ -964,7 +1130,7 @@
       });
     }
 
-    var unused = state.employees.filter(function(e){ return !dayAppearance[e.id]; });
+    var unused = state.employees.filter(function(e){ return !absentSet[e.id] && !dayAppearance[e.id]; });
     var leftover = [];
     unused.forEach(function(e){
       var placed = false;
@@ -975,13 +1141,13 @@
           var postId = shuffled[pi];
           var post = findPost(postId);
           if(!post) continue;
-          if(lockedPostCol[postId+'_'+col]) continue;
+          if(lockedPostCol[postId+'_'+col] || lockedReposicao[postId+'_'+col]) continue;
           if(e.restritoVerde && post.criticidade!=='verde') continue;
           if((dayPostCount[e.id+'|'+postId]||0) >= 1) continue;
           var prevOccupant = col>0 ? resolveOccupant(sched[postId][col-1]) : null;
           var nextOccupant = col<n-1 ? resolveOccupant(sched[postId][col+1]) : null;
           if(prevOccupant===e.id || nextOccupant===e.id) continue;
-          if(post.criticidade==='vermelho' && col>0 && redInCol[col-1][e.id]) continue;
+          if(post.criticidade==='vermelho' && (dayRed[e.id]||0)>=1) continue;
           var current = sched[postId][col];
           if(current==='AUSENTE' || current==='SENIOR' || current===null){
             sched[postId][col] = e.id;
@@ -1008,6 +1174,35 @@
 
     state.schedule[day] = sched;
     return leftover;
+  }
+
+  // A carga pesada considera todos os rodízios do dia, inclusive formação.
+  function heavyCounts(day, sched, skipPostId, skipCol){
+    sched = sched || state.schedule[day] || {};
+    var counts = {};
+    state.posts.forEach(function(post){
+      if(post.criticidade!=='vermelho') return;
+      (sched[post.id]||[]).slice(0,slotCount(day)).forEach(function(val,col){
+        if(post.id===skipPostId && col===skipCol) return;
+        var ids = [];
+        if(typeof val==='string' && val.indexOf('FORM:')===0){
+          var f=findFormacao(val.slice(5));
+          if(f) ids=[f.traineeId,f.trainerId];
+        } else if(typeof val==='string' && val.indexOf('REP:')===0){
+          var r=findReposicao(day,val.slice(4));
+          if(r) ids=['reposicao:'+r.name.trim().toLowerCase()];
+        } else { var id=resolveOccupant(val); if(id) ids=[id]; }
+        ids.filter(function(id,i){ return id && ids.indexOf(id)===i; }).forEach(function(id){ counts[id]=(counts[id]||0)+1; });
+      });
+    });
+    return counts;
+  }
+  function hasHeavyAssignment(day, empId, skipPostId, skipCol, sched){
+    return (heavyCounts(day,sched,skipPostId,skipCol)[empId]||0)>0;
+  }
+  function heavyViolations(day,sched){
+    var counts=heavyCounts(day,sched);
+    return Object.keys(counts).reduce(function(sum,id){ return sum+Math.max(0,counts[id]-1); },0);
   }
 
   function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
@@ -1056,10 +1251,11 @@
     //   portanto Empréstimo tem impacto líquido de -5 e Sênior de -10;
     // - cada repetição do mesmo posto pelo mesmo funcionário no dia: -5 pontos;
     // - funcionário escalado fora de sua formação: -10 pontos.
-    var penalty = (absent + senior + emprestimo)*15 - emprestimo*10 - senior*5 + repeatedAssignments*5 + qualificationErrors*10;
+    var heavyErrors=heavyViolations(day,sched);
+    var penalty = heavyErrors*25 + (absent + senior + emprestimo)*15 - emprestimo*10 - senior*5 + repeatedAssignments*5 + qualificationErrors*10;
     var score=Math.max(0,Math.min(100,100-penalty));
     var colScores=perCol.map(function(x){return x.total ? x.filled/x.total*100 : 100;});
-    return {score:score,coverage:coverage,absent:absent,senior:senior,emprestimo:emprestimo,total:total,repeatedAssignments:repeatedAssignments,repeatSamePost:repeatSamePost,loads:perEmployee,colScores:colScores,perEmployeePosts:perEmployeePosts};
+    return {heavyViolations:heavyErrors,score:score,coverage:coverage,absent:absent,senior:senior,emprestimo:emprestimo,total:total,repeatedAssignments:repeatedAssignments,repeatSamePost:repeatSamePost,loads:perEmployee,colScores:colScores,perEmployeePosts:perEmployeePosts};
   }
 
   function pairCountsFromSchedule(scheduleMap, dayIds){
@@ -1317,10 +1513,7 @@
             if(e.id===prevOccupant || e.id===nextOccupant) return false;
             if(e.id===empId) return false;
             if(e.restritoVerde && post.criticidade!=='verde') return false;
-            if(post.criticidade==='vermelho'){
-              if(col>0 && redInCol[col-1][e.id]) return false;
-              if(col<n-1 && redInCol[col+1][e.id]) return false;
-            }
+            if(post.criticidade==='vermelho' && hasHeavyAssignment(day,e.id,post.id,col,sched)) return false;
             return true;
           });
           if(candidates.length){
@@ -1426,6 +1619,7 @@
     var m=scheduleMetrics(currentDay);
     var label=dayLabel(currentDay);
     var details=[];
+    if(m.heavyViolations) details.push(m.heavyViolations+' repetição(ões) de posto pesado — corrija antes de usar');
     if(m.absent) details.push(m.absent+' ausência(s)');
     if(m.emprestimo) details.push(m.emprestimo+' empréstimo(s)');
     if(m.senior) details.push(m.senior+' sênior(es)');
@@ -1439,6 +1633,7 @@
   }
 
   function renderRodizioGrids(){
+    renderDayEfficiency();
     saveStateToLocalStorage();
     var container = document.getElementById('rodizio-grids');
     var visible = state.setores.filter(function(s){ return state.selectedSetorIds.indexOf(s.id)!==-1; });
@@ -1850,6 +2045,7 @@
       if(e.id===currentVal){ status = 'Atual neste posto'; }
       else if(absentSet[e.id]){ status = 'Ausente hoje'; blocked = true; }
       else if(e.restritoVerde && post.criticidade!=='verde'){ status = 'Restrito a postos verdes'; blocked = true; }
+      else if(post.criticidade==='vermelho' && hasHeavyAssignment(day,e.id,postId,col)){ status = 'Já fez posto pesado neste dia'; blocked = true; }
       else if(usedThisCol[e.id]){ status = 'Em outro posto neste turno'; blocked = true; }
       else if(e.id===prevOccupant || e.id===nextOccupant){ status = 'Mesmo posto em turno adjacente'; blocked = true; }
       var btn = blocked ? '' : '<button data-action="pick-assign" data-day="'+day+'" data-post="'+postId+'" data-col="'+col+'" data-emp="'+e.id+'">Selecionar</button>';
@@ -1927,7 +2123,7 @@
     var posts = state.posts.filter(function(p){ return p.setorId===setor.id; });
     ctx.fillStyle = '#eafaf6';
     ctx.fillRect(x, y, width, IMG_TITLE_H);
-    ctx.fillStyle = '#0b7a63';
+    ctx.fillStyle = '#1c4fb0';
     ctx.font = '700 15px "Space Grotesk", sans-serif';
     ctx.fillText(setor.name.toUpperCase()+'  ·  '+setor.factory, x+10, y+20);
 
@@ -2028,7 +2224,7 @@
     ctx.fillRect(0,0,canvasWidth,canvasHeight);
 
     var grad = ctx.createLinearGradient(0,0,canvasWidth,0);
-    grad.addColorStop(0,'#17c1a0'); grad.addColorStop(.5,'#2f6fed'); grad.addColorStop(1,'#3ddc84');
+    grad.addColorStop(0,'#1d4ed8'); grad.addColorStop(.5,'#2f6fed'); grad.addColorStop(1,'#7aa7ff');
     ctx.fillStyle = grad;
     ctx.fillRect(0,0,canvasWidth,10);
 
@@ -2064,6 +2260,7 @@
   }
 
   function exportRodizioImage(){
+    if(heavyViolations(currentDay)){ showToast('Corrija a repetição de posto pesado antes de exportar.'); return; }
     var canvas = buildRodizioImage();
     if(!canvas) return;
     canvas.toBlob(function(blob){
@@ -2302,6 +2499,9 @@
     document.getElementById('btn-backup-cadastro-save').addEventListener('click', function(){ openBackupNameModal('cadastro'); });
     document.getElementById('btn-backup-cadastro-import').addEventListener('click', function(){
       document.getElementById('input-backup-cadastro-import').click();
+    });
+    document.getElementById('btn-aplicar-tabela').addEventListener('click', function(){
+      showModal('<h3>Aplicar cadastro da tabela?</h3><p class="modal-hint">Baixe e guarde o backup atual antes de aplicar. O cadastro da tabela substituirá os dados deste navegador e o rodízio ficará vazio.</p><button class="btn ghost" data-action="backup-antes-tabela">1. Baixar backup atual</button><button class="btn" data-action="aplicar-tabela" disabled id="confirmar-tabela">2. Aplicar cadastro</button><button class="btn ghost" data-action="close">Cancelar</button>');
     });
     document.getElementById('btn-backup-completo-save').addEventListener('click', function(){ openBackupNameModal('completo'); });
     document.getElementById('btn-backup-completo-import').addEventListener('click', function(){
@@ -2658,8 +2858,21 @@
       var t = e.target.closest('[data-action]');
       if(!t) return;
       var action = t.dataset.action;
+      if(action==='backup-antes-tabela'){ downloadBackupCompleto('antes-do-cadastro-da-tabela'); document.getElementById('confirmar-tabela').disabled=false; return; }
+      if(action==='aplicar-tabela'){
+        if(document.getElementById('confirmar-tabela').disabled) return;
+        var previousPosts=state.posts;
+        state.posts=deepClone(seedPosts);
+        state.posts.forEach(function(p){ var old=previousPosts.filter(function(o){return o.name===p.name;})[0]; if(old){p.criticidade=old.criticidade || 'verde';p.epis=deepClone(old.epis || p.epis);} });
+        state.employees=deepClone(seedEmployees); state.setores=deepClone(seedSetores); state.selectedSetorIds=seedSetores.map(function(s){return s.id;});
+        state.formacoes=[]; state.formacaoDismissed=[]; state.schedule={}; state.absentees={}; state.reposicoes={};
+        DAYS.forEach(function(d){state.schedule[d.id]=emptyStructureFor(d.id);state.absentees[d.id]=[null,null,null,null,null,null];state.reposicoes[d.id]=[];});
+        saveStateToLocalStorage(); closeModal(); renderAllSetorDependent(); renderListaFormacoes(); renderRodizio(); showToast('Cadastro da tabela aplicado. Gere um novo rodízio.'); return;
+      }
       if(action==='close'){ closeModal(); return; }
       if(action==='pick-assign'){
+        var selectedPost=findPost(t.dataset.post);
+        if(selectedPost && selectedPost.criticidade==='vermelho' && hasHeavyAssignment(t.dataset.day,t.dataset.emp,t.dataset.post,parseInt(t.dataset.col,10))){ showToast('Este operador já tem um posto pesado neste dia.'); return; }
         state.schedule[t.dataset.day][t.dataset.post][parseInt(t.dataset.col,10)] = t.dataset.emp;
         closeModal(); renderRodizioGrids();
       } else if(action==='mark-ausente'){
@@ -2674,6 +2887,9 @@
         var nrep=slotCount(currentDay), postIds=[];
         for(var rc=0;rc<3;rc++){ var sel=document.getElementById('rep-post-'+rc); postIds.push(sel && rc<nrep ? sel.value : ''); }
         if(!name){ showToast('Informe o nome da reposição.'); return; }
+        var heavyRepCount=postIds.filter(function(pid){ var p=findPost(pid); return p && p.criticidade==='vermelho'; }).length;
+        var existingHeavy=heavyCounts(currentDay)['reposicao:'+name.toLowerCase()]||0;
+        if(heavyRepCount+existingHeavy>1){ showToast('A reposição só pode fazer um posto pesado por dia.'); return; }
         if(!postIds.some(Boolean)){ showToast('Selecione ao menos um posto para a reposição.'); return; }
         var conflict=null;
         postIds.forEach(function(pid,col){
