@@ -168,7 +168,7 @@
   td.cell.ausente{ background:#ff5c5c; color:#fff; font-weight:700; border-radius:8px; }
   td.cell.emprestimo{ background:#8b5cf6; color:#fff; font-weight:700; border-radius:8px; }
   td.cell.reposicao{ cursor:default; }
-  td.cell.locked{ background:#e7edff; color:#1c4fb0; font-weight:600; cursor:default; }
+  td.cell.locked{ background:#ffedd5; color:#9a3412; font-weight:600; cursor:default; }
 
   .crit-dot{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle; }
   .crit-dot.crit-verde{ background:var(--green); }
@@ -324,6 +324,33 @@
   .install-banner,.update-banner{position:fixed;z-index:100;left:50%;transform:translateX(-50%);bottom:22px;width:min(680px,calc(100% - 28px));display:flex;align-items:center;gap:14px;background:rgba(7,18,34,.96);color:#fff;border:1px solid rgba(255,255,255,.18);box-shadow:0 18px 55px rgba(0,0,0,.45);border-radius:16px;padding:13px 14px}.install-banner.hidden,.update-banner.hidden{display:none}.install-banner div{flex:1;display:flex;flex-direction:column;gap:3px}.install-banner span{font-size:.75rem;color:#b8cada}.install-close{border:0;background:transparent;color:#fff;font-size:1rem;cursor:pointer}
   @media(max-width:760px){body{padding-bottom:84px}.topbar{position:relative;z-index:10;padding:calc(12px + env(safe-area-inset-top)) 14px 12px;min-height:104px;display:grid;grid-template-columns:1fr;grid-template-rows:auto auto;justify-items:center;align-items:center;gap:7px}.logo{height:46px;width:auto;max-width:82vw;object-fit:contain;position:relative;z-index:12;margin:0 auto;display:block}.brand-tag{display:block;font-size:.66rem;text-align:center;line-height:1.1}.topbar-actions{width:100%;margin:0;min-height:0}.main-tabs{position:fixed;z-index:60;left:0;right:0;bottom:0;background:rgba(5,12,22,.97);backdrop-filter:blur(14px);padding:8px 6px max(8px,env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(6,1fr);gap:3px;border-top:1px solid rgba(255,255,255,.12);box-shadow:0 -10px 30px rgba(0,0,0,.25)}.main-tabs button{padding:9px 3px;border:0;border-radius:10px;font-size:.64rem;white-space:nowrap}.page{padding:18px 12px 28px}.day-tabs{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.day-tabs button{flex:0 0 auto}.rodizio-grids{grid-template-columns:1fr}.area-block{overflow-x:auto}.dashboard-grid{grid-template-columns:1fr}.efficiency-row{grid-template-columns:90px 1fr 46px}.install-banner{bottom:90px;align-items:flex-start}.install-banner .btn{padding:9px 12px}.update-banner{bottom:90px}td.cell.ausente{background:#e5484d!important;color:#fff!important}td.cell.reposicao.senior{background:#ffcc33!important;color:#5c4200!important}td.cell.reposicao.emprestimo{background:#7c3aed!important;color:#fff!important}}
 
+
+  .coverage-controls{display:flex;gap:16px;align-items:end;flex-wrap:wrap;margin:14px 0;}
+  .coverage-controls label{display:grid;gap:6px;font-size:.85rem;color:#33506b;}
+  .coverage-controls input[type=number]{width:100px;}
+  .coverage-controls .search-box{margin:0;flex:1;min-width:200px;}
+  .coverage-summary{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;}
+  .coverage-table-wrap{overflow:auto;border:1px solid #d7e2ea;border-radius:10px;}
+  .coverage-table{width:100%;min-width:740px;border-collapse:collapse;font-size:.84rem;}
+  .coverage-table th{text-align:left;background:#e7efff;color:#1e3a8a;padding:12px;}
+  .coverage-table td{padding:12px;border-bottom:1px solid #d7e2ea;vertical-align:top;line-height:1.55;}
+  .coverage-table tr:last-child td{border-bottom:0;}
+  .coverage-table .coverage-count{font-family:var(--font-mono);font-weight:700;font-size:1rem;}
+  .coverage-warning{display:inline-block;padding:3px 8px;border-radius:6px;background:#fff0d4;color:#714900;}
+  .coverage-empty{background:#fdeceb;color:#b13a2f;}
+  .coverage-ready{background:#e7efff;color:#1e3a8a;}
+
+  .sector-tag{display:inline-block;padding:3px 9px;border-radius:6px;font-size:.75rem;font-weight:700;}
+  .sector-tag.setor-mox,.area-title.setor-mox{background:#e4edff;color:#1e40af;border-left:4px solid #2563eb;}
+  .sector-tag.setor-sc5,.area-title.setor-sc5{background:#eee6ff;color:#5b21b6;border-left:4px solid #7c3aed;}
+  .area-block.setor-mox{border-top:3px solid #2563eb;padding-top:12px;}
+  .area-block.setor-sc5{border-top:3px solid #7c3aed;padding-top:12px;}
+  table.rodizio.setor-mox th{background:#e4edff;color:#1e40af;}
+  table.rodizio.setor-sc5 th{background:#eee6ff;color:#5b21b6;}
+  .area-group.setor-mox h4{color:#1e40af;}
+  .area-group.setor-sc5 h4{color:#5b21b6;}
+  .formation-badge{display:inline-block;padding:4px 9px;border-radius:6px;background:#ffedd5;color:#9a3412;border:1px solid #fdba74;font-size:.78rem;font-weight:700;}
+  table.rodizio td.cell.locked{background:#ffedd5!important;color:#9a3412!important;border-left:3px solid #f97316;}
 </style>
 </head>
 <body>
@@ -344,6 +371,10 @@
   </header>
 
   <main id="page-inicio" class="page active">
+    <div class="coverage-controls">
+      <label for="rodizio-week-start">Semana do rodízio (segunda-feira)<input type="date" id="rodizio-week-start" style="width:180px"></label>
+      <span id="rodizio-date-label" class="hint-small"></span>
+    </div>
     <div class="day-tabs">
       <button data-day="segunda" class="active">Segunda</button>
       <button data-day="terca">Terça</button>
@@ -367,10 +398,14 @@
       </div>
       <div id="day-efficiency"></div>
       <div class="rodizio-grids" id="rodizio-grids"></div>
-      <p class="crit-hint">Máximo de um posto pesado por operador por dia. 🟢 Verde · 🟡 Amarelo · 🔴 Vermelho — classificação do posto · 🔒 vaga travada por Formação/Reposição · <b style="color:#d93636">Ausente</b> · <b style="color:#6d35c5">Empréstimo</b> · <b style="color:#8a6d00">Sênior</b></p>
+      <p class="crit-hint">Máximo de um posto pesado por operador por dia. 🟢 Verde · 🟡 Amarelo · 🔴 Vermelho — classificação do posto · <span class="formation-badge">Formação</span> · 🔒 vaga travada por Formação/Reposição · <b style="color:#d93636">Ausente</b> · <b style="color:#6d35c5">Empréstimo</b> · <b style="color:#8a6d00">Sênior</b></p>
       <div class="ausentes-panel">
         <h3>Ausentes</h3>
-        <p class="hint-small">Remover um ausente não desfaz substituições já feitas — gere novamente se precisar reverter.</p>
+        <p class="hint-small">As vagas do ausente ficam indicadas para Sênior. Registre quem fará a cobertura em Repor Ausências. Remover a ausência não restaura o rodízio anterior.</p>
+        <h3 style="margin-top:18px">Afastamentos de longa duração</h3>
+        <p class="hint-small">Registre em Listas → Funcionários → Afastamento. O cadastro permanece, e as vagas do período ficam indicadas para Sênior. Confirme o nome da cobertura em Repor Ausências.</p>
+        <div id="long-absences-list"></div>
+        <h4 style="margin-top:18px">Ausências pontuais</h4>
         <div class="ausentes-slots" id="ausentes-slots"></div>
         <div class="reposicoes-panel">
           <div class="reposicoes-head">
@@ -410,6 +445,21 @@
       </section>
     </div>
     <section class="card stacked-card">
+      <h2>Cobertura por posto e plano de formação</h2>
+      <p class="hint-small">Quem já está habilitado em cada posto. Os postos com menos operadores aparecem primeiro. Quem está em formação fica separado e só entra na contagem depois da habilitação.</p>
+      <div class="coverage-controls">
+        <label>Meta de habilitados por posto<input type="number" id="coverage-target" min="1" max="999" step="1" value="6"></label>
+        <input type="search" id="coverage-search" class="search-box" placeholder="Buscar posto, setor ou operador..." aria-label="Buscar cobertura por posto">
+      </div>
+      <p class="hint-small">A meta é ajustável para planejar treinamentos. A quantidade sozinha não garante a cobertura do rodízio: ausências, restrições e postos pesados também precisam ser considerados.</p>
+      <div id="coverage-summary" class="coverage-summary"></div>
+      <div class="coverage-table-wrap"><table class="coverage-table">
+        <thead><tr><th>Posto / setor</th><th>Habilitados</th><th>Quem já faz</th><th>Disponíveis no dia</th><th>Em formação</th><th>Para atingir a meta</th></tr></thead>
+        <tbody id="coverage-rows"></tbody>
+      </table></div>
+      <p class="hint-small">Em formação inclui registros da aba Formação e as pendências da tabela enviada. Revise a conclusão antes de adicionar o posto às habilitações do operador.</p>
+    </section>
+    <section class="card stacked-card">
       <h2>Quem passa em cada posto na semana</h2>
       <input type="text" id="dashboard-post-search" class="search-box" placeholder="Buscar posto...">
       <div id="dashboard-post-details" class="post-week-list"></div>
@@ -434,11 +484,11 @@
         <select id="formacao-aprendiz"></select>
         <label class="field-label">Posto</label>
         <select id="formacao-posto"></select>
-        <label class="field-label">Rodízio (turno)</label>
+        <label class="field-label">Rodízio</label>
         <select id="formacao-turno">
-          <option value="0">1º</option>
-          <option value="1">2º</option>
-          <option value="2">3º</option>
+          <option value="0">1º rodízio</option>
+          <option value="1">2º rodízio</option>
+          <option value="2">3º rodízio</option>
         </select>
         <label class="field-label">Quem irá formá-lo (instrutor)</label>
         <select id="formacao-instrutor"></select>
@@ -447,7 +497,7 @@
     </section>
     <section class="card stacked-card">
       <h2>Formações registradas</h2>
-      <p class="hint-small">Aplicadas de segunda a sexta, travadas no posto e turno escolhidos — não mudam nem ao gerar o rodízio automaticamente.</p>
+      <p class="hint-small">Aplicadas de segunda a sexta, travadas no posto e rodízio escolhidos — não mudam nem ao gerar o rodízio automaticamente.</p>
       <div id="lista-formacoes" class="list-container"></div>
     </section>
     <p class="footnote">Criado por: Thiago Vaz - LB14762 e Sony Montana</p>
@@ -602,15 +652,97 @@
 
   var DEFAULT_EPIS = ['Sapato de segurança','Casquete','Protetor auricular','Óculos de proteção','Luva anticorte'];
 
+  function dateIsValid(value){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(value||''))) return false;
+    var d=new Date(value+'T12:00:00Z');
+    return !isNaN(d.getTime()) && d.toISOString().slice(0,10)===value;
+  }
+  function addDateDays(value,days){
+    var d=new Date(value+'T12:00:00Z'); d.setUTCDate(d.getUTCDate()+days); return d.toISOString().slice(0,10);
+  }
+  function todayISO(){
+    var parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+    function part(type){return parts.filter(function(p){return p.type===type;})[0].value;}
+    return part('year')+'-'+part('month')+'-'+part('day');
+  }
+  function mondayOf(value){
+    var d=new Date(value+'T12:00:00Z'); return addDateDays(value,-((d.getUTCDay()+6)%7));
+  }
+  function dateForDay(day){
+    var index=DAYS.map(function(d){return d.id;}).indexOf(day);
+    return addDateDays(state.weekStart || mondayOf(todayISO()),Math.max(0,index));
+  }
+  function prettyDate(value){return dateIsValid(value)?value.slice(8,10)+'/'+value.slice(5,7)+'/'+value.slice(0,4):'—';}
+  function leaveForDate(emp,date){
+    return ((emp && emp.afastamentos)||[]).filter(function(a){
+      return !a.cancelado && dateIsValid(a.inicio) && a.inicio<=date && (!a.fim || date<=a.fim) && (!a.retorno || date<a.retorno);
+    })[0] || null;
+  }
+  function isOnLeave(empId,day){return !!leaveForDate(findEmployee(empId),dateForDay(day));}
+  function absenceSetFor(day){
+    var set={}; (state.absentees[day]||[]).forEach(function(id){if(id)set[id]=true;});
+    state.employees.forEach(function(e){if(isOnLeave(e.id,day))set[e.id]=true;}); return set;
+  }
+  function addEmployeeLeave(empId,start,end,reason){
+    var emp=findEmployee(empId);
+    if(!emp) return 'Operador não encontrado.';
+    if(!dateIsValid(start) || (end && !dateIsValid(end))) return 'Informe datas válidas.';
+    if(end && end<start) return 'O fim não pode ser anterior ao início.';
+    var leaves=emp.afastamentos || [];
+    var overlap=leaves.some(function(a){
+      if(a.cancelado || !dateIsValid(a.inicio))return false;
+      var last=a.fim || '9999-12-31'; if(a.retorno && a.retorno<=last)last=addDateDays(a.retorno,-1);
+      return a.inicio<=last && start<=last && a.inicio<=(end || '9999-12-31');
+    });
+    if(overlap)return 'Já existe um afastamento nesse período.';
+    if(!emp.afastamentos)emp.afastamentos=[];
+    emp.afastamentos.push({id:uid('af'),inicio:start,fim:end || '',motivo:String(reason || '').trim()});
+    sanitizeLeaveAssignments(); saveStateToLocalStorage(); return '';
+  }
+  function registerLeaveReturn(empId,leaveId,date){
+    var emp=findEmployee(empId),a=((emp && emp.afastamentos)||[]).filter(function(a){return a.id===leaveId;})[0];
+    if(!a || a.cancelado || a.retorno)return 'Afastamento não encontrado ou já encerrado.';
+    if(!dateIsValid(date) || date<a.inicio)return 'O retorno não pode ser anterior ao início.';
+    a.retorno=date; saveStateToLocalStorage(); return '';
+  }
+  function sanitizeLeaveAssignments(){
+    var changed=0;
+    DAYS.forEach(function(d){
+      var sched=state.schedule[d.id] || {};
+      Object.keys(sched).forEach(function(pid){
+        sched[pid]=sched[pid].map(function(val){
+          var blocked=false;
+          if(typeof val==='string' && val.indexOf('FORM:')===0){var f=findFormacao(val.slice(5));blocked=f && (isOnLeave(f.traineeId,d.id)||isOnLeave(f.trainerId,d.id));}
+          else{var id=resolveOccupant(val);blocked=id && isOnLeave(id,d.id);}
+          if(blocked){changed++;return 'SENIOR';}return val;
+        });
+      });
+    });return changed;
+  }
+  function openLeaveModal(empId){
+    var emp=findEmployee(empId);if(!emp)return;
+    var today=todayISO();
+    var history=(emp.afastamentos || []).map(function(a){
+      var label=prettyDate(a.inicio)+' até '+(a.fim?prettyDate(a.fim):'sem previsão');
+      var buttons='';
+      if(a.cancelado)label+=' · cancelado';
+      else if(a.retorno)label+=' · retorno em '+prettyDate(a.retorno);
+      else if(a.inicio>today)buttons='<button class="btn ghost" data-action="cancel-leave" data-emp="'+emp.id+'" data-leave="'+a.id+'">Cancelar período</button>';
+      else if(!a.fim || a.fim>=today)buttons='<button class="btn ghost" data-action="return-leave" data-emp="'+emp.id+'" data-leave="'+a.id+'">Registrar retorno hoje</button>';
+      return '<div class="post-week-item"><strong>'+escapeHtml(label)+'</strong><p class="hint-small">'+escapeHtml(a.motivo || 'Sem motivo informado')+'</p>'+buttons+'</div>';
+    }).join('');
+    showModal('<span class="modal-close" data-action="close">✕</span><h3>Afastamentos · '+escapeHtml(emp.name)+'</h3><p class="modal-hint">O cadastro e as habilitações permanecem. O operador fica fora do rodízio nos dias do afastamento. O último dia informado ainda conta como ausência; no dia do retorno ele fica disponível.</p>'+history+'<h4 style="margin-top:18px">Novo afastamento</h4><label class="field-label" for="leave-start">Início</label><input type="date" id="leave-start" value="'+today+'"><label class="field-label" for="leave-end">Último dia ausente (opcional)</label><input type="date" id="leave-end"><label class="field-label" for="leave-reason">Motivo (opcional)</label><input type="text" id="leave-reason" maxlength="160" placeholder="Ex.: férias"><button class="btn" data-action="save-leave" data-emp="'+emp.id+'" style="margin-top:16px">Salvar afastamento</button>');
+  }
+
   var seedSetores = [
     {id:'s0', name:'MOX', factory:'CVP'},
     {id:'s1', name:'SC5', factory:'CVP'}
   ];
 
   var seedPostDefs = [
-    ['01A','s0'],['01C','s0'],['KIT1','s1'],['KIT2','s1'],['KIT4','s1'],
+    ['01A','s0'],['01C','s0'],['KIT1','s0'],['KIT2','s0'],['KIT4','s0'],
     ['03E','s0'],['04E','s0'],['05D','s0'],['06D','s0'],['07D','s0'],
-    ['07E','s0'],['08D','s0'],['11D','s1'],['12D','s1'],
+    ['07E','s0'],['08D','s0'],['11D','s0'],['12D','s0'],
     ['1E','s1'],['4D','s1'],['4E','s1'],['5D','s1'],['5E','s1'],
     ['6D','s1'],['6E','s1'],['7E','s1'],['7D','s1']
   ];
@@ -865,6 +997,7 @@
   });
 
   var state = {
+    weekStart: mondayOf(todayISO()),
     posts: seedPosts,
     employees: seedEmployees,
     setores: seedSetores,
@@ -892,6 +1025,7 @@
   function saveStateToLocalStorage(){
     try{
       var payload = {
+        weekStart: state.weekStart,
         posts: state.posts,
         employees: state.employees,
         setores: state.setores,
@@ -914,6 +1048,7 @@
       if(!raw) return false;
       var data = JSON.parse(raw);
       if(!data || typeof data !== 'object') return false;
+      if(dateIsValid(data.weekStart)) state.weekStart=mondayOf(data.weekStart);
       if(Array.isArray(data.posts)) state.posts = data.posts;
       if(Array.isArray(data.employees)) state.employees = data.employees;
       if(Array.isArray(data.setores)) state.setores = data.setores;
@@ -940,6 +1075,21 @@
   function dayLabel(id){ var d=DAYS.filter(function(x){return x.id===id;})[0]; return d?d.label:id; }
   function findPost(id){ return state.posts.filter(function(p){return p.id===id;})[0]; }
   function findEmployee(id){ return state.employees.filter(function(e){return e.id===id;})[0]; }
+  function alignKnownPostSectors(){
+    var mox=state.setores.filter(function(s){return String(s.name).trim().toUpperCase()==='MOX';})[0];
+    var sc5=state.setores.filter(function(s){return String(s.name).trim().toUpperCase()==='SC5';})[0];
+    if(!mox || !sc5)return;
+    var moxCodes=['01A','01C','KIT1','KIT2','KIT4','03E','04E','05D','06D','07D','07E','08D','11D','12D'];
+    var sc5Codes=['1E','4D','4E','5D','5E','6D','6E','7E','7D'];
+    state.posts.forEach(function(p){
+      if(moxCodes.indexOf(p.name)!==-1)p.setorId=mox.id;
+      else if(sc5Codes.indexOf(p.name)!==-1)p.setorId=sc5.id;
+    });
+  }
+  function sectorTheme(setor){
+    var name=String(setor && setor.name || '').trim().toUpperCase();
+    return name==='MOX'?'setor-mox':name==='SC5'?'setor-sc5':'';
+  }
   function findSetor(id){ return state.setores.filter(function(s){return s.id===id;})[0]; }
   function findFormacao(id){ return state.formacoes.filter(function(f){return f.id===id;})[0]; }
   function findReposicao(day,id){ return (state.reposicoes[day]||[]).filter(function(r){return r.id===id;})[0]; }
@@ -987,12 +1137,11 @@
   /* ---------- rotation generation (maximum bipartite matching per column + rescue pass) ---------- */
   function generateCandidateForDay(day, weeklyPairBase){
     var n = slotCount(day);
-    var absentSet = {};
-    (state.absentees[day]||[]).forEach(function(id){ if(id) absentSet[id]=true; });
+    var absentSet = absenceSetFor(day);
     var sched = {};
     state.posts.forEach(function(p){ sched[p.id] = new Array(n).fill(null); });
 
-    var activeFormacoes = day==='sabado' ? [] : state.formacoes.filter(function(f){ return f.col < n; });
+    var activeFormacoes = day==='sabado' ? [] : state.formacoes.filter(function(f){ return f.col < n && !absentSet[f.traineeId] && !absentSet[f.trainerId]; });
     var lockedPostCol = {};
     var lockedReposicao = {};
     var colExcluded = [];
@@ -1114,7 +1263,7 @@
               redInCol[col][empId] = true;
             }
           } else {
-            sched[post.id][col] = 'AUSENTE';
+            sched[post.id][col] = 'SENIOR';
           }
         });
       })(col, postsToFill);
@@ -1209,6 +1358,7 @@
 
   function scheduleMetrics(day, sched){
     sched = sched || state.schedule[day] || {};
+    var seniorPending=0;
     var n=slotCount(day), total=0, normalFilled=0, absent=0, senior=0, emprestimo=0, repeatSamePost=0, qualificationErrors=0;
     var perEmployee={}, perEmployeePosts={}, perCol=[];
     for(var c=0;c<n;c++) perCol.push({total:0,filled:0});
@@ -1218,7 +1368,7 @@
       for(var col=0;col<n;col++){
         total++; perCol[col].total++;
         var val=arr[col];
-        if(val==='AUSENTE' || val==='SENIOR' || val==null){ absent++; prev=null; continue; }
+        if(val==='AUSENTE' || val==='SENIOR' || val==null){ if(val==='SENIOR')seniorPending++; absent++; prev=null; continue; }
         if(typeof val==='string' && val.indexOf('REP:')===0){
           var rep=findReposicao(day,val.slice(4));
           if(rep && rep.type==='EMPRESTIMO') emprestimo++; else senior++;
@@ -1255,7 +1405,7 @@
     var penalty = heavyErrors*25 + (absent + senior + emprestimo)*15 - emprestimo*10 - senior*5 + repeatedAssignments*5 + qualificationErrors*10;
     var score=Math.max(0,Math.min(100,100-penalty));
     var colScores=perCol.map(function(x){return x.total ? x.filled/x.total*100 : 100;});
-    return {heavyViolations:heavyErrors,score:score,coverage:coverage,absent:absent,senior:senior,emprestimo:emprestimo,total:total,repeatedAssignments:repeatedAssignments,repeatSamePost:repeatSamePost,loads:perEmployee,colScores:colScores,perEmployeePosts:perEmployeePosts};
+    return {seniorPending:seniorPending,heavyViolations:heavyErrors,score:score,coverage:coverage,absent:absent,senior:senior,emprestimo:emprestimo,total:total,repeatedAssignments:repeatedAssignments,repeatSamePost:repeatSamePost,loads:perEmployee,colScores:colScores,perEmployeePosts:perEmployeePosts};
   }
 
   function pairCountsFromSchedule(scheduleMap, dayIds){
@@ -1301,6 +1451,8 @@
     var weeklyBase=options.weeklyPairBase || null;
     var deterministicContext = JSON.stringify({
       day:day,
+      weekStart:state.weekStart,
+      afastamentos:state.employees.map(function(e){return [e.id,e.afastamentos || []];}),
       employees:state.employees.map(function(e){return [e.id,e.name,(e.postIds||[]).slice().sort(),!!e.restritoVerde];}),
       posts:state.posts.map(function(p){return [p.id,p.name,p.criticidade,p.setorId];}),
       absentees:(state.absentees[day]||[]).slice(),
@@ -1469,7 +1621,7 @@
     if(!sched) return;
     var n = slotCount(day);
     if(day!=='sabado'){
-      state.formacoes.filter(function(f){ return f.col<n; }).forEach(function(f){
+      state.formacoes.filter(function(f){ return f.col<n && !absenceSetFor(day)[f.traineeId] && !absenceSetFor(day)[f.trainerId]; }).forEach(function(f){
         if(sched[f.postId]) sched[f.postId][f.col] = 'FORM:'+f.id;
       });
     }
@@ -1479,60 +1631,23 @@
   }
 
   function applyAbsence(day, empId){
-    var sched = state.schedule[day];
-    if(!sched) return;
-    var n = slotCount(day);
-    var absentSet = {};
-    (state.absentees[day]||[]).forEach(function(id){ if(id) absentSet[id]=true; });
-
-    var redInCol = [];
-    for(var i=0;i<n;i++) redInCol.push({});
-    state.posts.forEach(function(post){
-      for(var c=0;c<n;c++){
-        var occ = resolveOccupant(sched[post.id][c]);
-        if(occ && post.criticidade==='vermelho') redInCol[c][occ] = true;
-      }
-    });
-
-    for(var col=0; col<n; col++){
-      var usedThisCol = {};
-      state.posts.forEach(function(post){
-        var occ = resolveOccupant(sched[post.id][col]);
-        if(occ && occ!==empId) usedThisCol[occ]=true;
-      });
-      state.posts.forEach(function(post){
-        var val = sched[post.id][col];
-        if(typeof val==='string' && val.indexOf('FORM:')===0) return;
-        if(val===empId){
-          var prevOccupant = col>0 ? resolveOccupant(sched[post.id][col-1]) : null;
-          var nextOccupant = col<n-1 ? resolveOccupant(sched[post.id][col+1]) : null;
-          var candidates = state.employees.filter(function(e){
-            if(e.postIds.indexOf(post.id)===-1) return false;
-            if(absentSet[e.id]) return false;
-            if(usedThisCol[e.id]) return false;
-            if(e.id===prevOccupant || e.id===nextOccupant) return false;
-            if(e.id===empId) return false;
-            if(e.restritoVerde && post.criticidade!=='verde') return false;
-            if(post.criticidade==='vermelho' && hasHeavyAssignment(day,e.id,post.id,col,sched)) return false;
-            return true;
-          });
-          if(candidates.length){
-            candidates.sort(function(a,b){ return a.name.localeCompare(b.name) || String(a.id).localeCompare(String(b.id)); });
-            var pick = candidates[0];
-            sched[post.id][col] = pick.id;
-            usedThisCol[pick.id] = true;
-            if(post.criticidade==='vermelho') redInCol[col][pick.id]=true;
-          } else {
-            sched[post.id][col] = 'AUSENTE';
-          }
+    var sched=state.schedule[day]; if(!sched)return;
+    Object.keys(sched).forEach(function(pid){
+      sched[pid]=sched[pid].map(function(val){
+        if(val===empId)return 'SENIOR';
+        if(typeof val==='string' && val.indexOf('FORM:')===0){
+          var f=findFormacao(val.slice(5));
+          if(f && (f.traineeId===empId || f.trainerId===empId))return 'SENIOR';
         }
+        return val;
       });
-    }
+    });
   }
 
   /* ---------- formação lock <-> schedule sync ---------- */
   function applyFormacaoToSchedules(f){
     WEEKDAYS.forEach(function(day){
+      if(isOnLeave(f.traineeId,day) || isOnLeave(f.trainerId,day)) return;
       var sched = state.schedule[day];
       if(!sched) return;
       Object.keys(sched).forEach(function(pid){
@@ -1579,13 +1694,14 @@
     var sched = state.schedule[day];
     var headerCols = '';
     var metrics=scheduleMetrics(day);
-    for(var i=0;i<n;i++) headerCols += '<th class="turn-head turn-'+i+'">'+(i+1)+'º</th>';
+    for(var i=0;i<n;i++) headerCols += '<th class="turn-head turn-'+i+'">'+(i+1)+'º rodízio</th>';
     var rows = posts.map(function(post){
       var cells = '';
       for(var c=0;c<n;c++){
         var val = sched ? sched[post.id][c] : null;
         var cls = 'cell', text = '—';
-        if(val==='AUSENTE' || val==='SENIOR'){ cls+=' ausente'; text='Ausente'; }
+        if(val==='SENIOR'){ cls+=' reposicao senior'; text='Sênior a definir'; }
+        else if(val==='AUSENTE'){ cls+=' ausente'; text='Ausente'; }
         else if(typeof val==='string' && val.indexOf('REP:')===0){
           var rep = findReposicao(day, val.slice(4));
           if(rep){ cls += ' reposicao '+(rep.type==='EMPRESTIMO'?'emprestimo':'senior'); text = '🔒 '+escapeHtml(rep.name); }
@@ -1596,7 +1712,7 @@
           if(f){
             var trainee = findEmployee(f.traineeId), trainer = findEmployee(f.trainerId);
             cls += ' locked';
-            text = '🔒 '+(trainee?escapeHtml(trainee.name):'—')+' / '+(trainer?escapeHtml(trainer.name):'—');
+            text = '🔒 Em formação · '+(trainee?escapeHtml(trainee.name):'—')+' / '+(trainer?escapeHtml(trainer.name):'—');
           } else { cls+=' empty'; text='—'; }
         }
         else if(val){ var emp=findEmployee(val); text = emp?escapeHtml(emp.name):'—'; }
@@ -1606,7 +1722,7 @@
       return '<tr><td class="post-code" data-action="view-post" data-post="'+post.id+'"><span class="crit-dot crit-'+post.criticidade+'"></span>'+escapeHtml(post.name)+'</td>'+cells+'</tr>';
     }).join('');
     if(!posts.length) rows = '<tr><td colspan="'+(n+1)+'" class="empty-msg" style="padding:14px;">Nenhum posto cadastrado para este setor.</td></tr>';
-    return '<table class="rodizio"><thead><tr><th>QUA</th>'+headerCols+'</tr></thead><tbody>'+rows+'</tbody></table>';
+    return '<table class="rodizio '+sectorTheme(findSetor(setorId))+'"><thead><tr><th>'+escapeHtml(dayLabel(day).slice(0,3).toUpperCase())+'</th>'+headerCols+'</tr></thead><tbody>'+rows+'</tbody></table>';
   }
 
   function efficiencyBar(label,value){
@@ -1620,7 +1736,8 @@
     var label=dayLabel(currentDay);
     var details=[];
     if(m.heavyViolations) details.push(m.heavyViolations+' repetição(ões) de posto pesado — corrija antes de usar');
-    if(m.absent) details.push(m.absent+' ausência(s)');
+    if(m.seniorPending) details.push(m.seniorPending+' cobertura(s) por sênior a definir');
+    if(m.absent>m.seniorPending) details.push((m.absent-m.seniorPending)+' vaga(s) sem cobertura');
     if(m.emprestimo) details.push(m.emprestimo+' empréstimo(s)');
     if(m.senior) details.push(m.senior+' sênior(es)');
     if(m.repeatedAssignments) details.push(m.repeatedAssignments+' repetição(ões) de posto');
@@ -1633,22 +1750,29 @@
   }
 
   function renderRodizioGrids(){
+    sanitizeLeaveAssignments();
+    renderLongAbsences();
     renderDayEfficiency();
     saveStateToLocalStorage();
     var container = document.getElementById('rodizio-grids');
-    var visible = state.setores.filter(function(s){ return state.selectedSetorIds.indexOf(s.id)!==-1; });
+    var visible = state.setores.filter(function(s){ return state.selectedSetorIds.indexOf(s.id)!==-1; }).sort(function(a,b){ var order={MOX:0,SC5:1}; var av=order[String(a.name).trim().toUpperCase()],bv=order[String(b.name).trim().toUpperCase()]; return (av==null?2:av)-(bv==null?2:bv); });
     if(!visible.length){
       container.innerHTML = '<p class="empty-msg">Nenhum setor selecionado para exibição. Use "Setores exibidos" acima para marcar ao menos um.</p>';
       return;
     }
     container.innerHTML = visible.map(function(setor){
-      return '<section class="area-block">'+
-        '<h3 class="area-title '+setor.factory.toLowerCase()+'">'+escapeHtml(setor.name)+' <span class="factory-badge '+setor.factory.toLowerCase()+'">'+setor.factory+'</span></h3>'+
+      return '<section class="area-block '+sectorTheme(setor)+'">'+
+        '<h3 class="area-title '+setor.factory.toLowerCase()+' '+sectorTheme(setor)+'">'+escapeHtml(setor.name)+' <span class="factory-badge '+setor.factory.toLowerCase()+'">'+setor.factory+'</span></h3>'+
         renderAreaTable(currentDay, setor.id)+
       '</section>';
     }).join('');
   }
 
+  function renderLongAbsences(){
+    var el=document.getElementById('long-absences-list');if(!el)return;
+    var rows=state.employees.filter(function(e){return !!leaveForDate(e,dateForDay(currentDay));});
+    el.innerHTML=rows.map(function(e){var a=leaveForDate(e,dateForDay(currentDay));return '<div class="post-week-item"><strong>'+escapeHtml(e.name)+'</strong><div class="hint-small">'+prettyDate(a.inicio)+' até '+(a.fim?prettyDate(a.fim):'sem previsão')+'</div></div>';}).join('') || '<p class="hint-small">Nenhum operador afastado neste dia.</p>';
+  }
   function renderAusentes(){
     saveStateToLocalStorage();
     var container = document.getElementById('ausentes-slots');
@@ -1669,7 +1793,7 @@
     var list = state.reposicoes[currentDay] || [];
     if(!list.length){ container.innerHTML = '<p class="empty-msg">Nenhuma reposição cadastrada para '+dayLabel(currentDay)+'.</p>'; return; }
     container.innerHTML = list.map(function(r){
-      var turnos = (r.postIds||[]).map(function(pid,i){ var p=pid?findPost(pid):null; return p ? (i+1)+'º: '+escapeHtml(p.name) : null; }).filter(Boolean).join(' · ');
+      var turnos = (r.postIds||[]).map(function(pid,i){ var p=pid?findPost(pid):null; return p ? (i+1)+'º rodízio: '+escapeHtml(p.name) : null; }).filter(Boolean).join(' · ');
       return '<div class="reposicao-item"><div class="reposicao-meta"><span class="reposicao-badge '+(r.type==='EMPRESTIMO'?'emprestimo':'senior')+'">'+(r.type==='EMPRESTIMO'?'Empréstimo':'Sênior')+'</span><strong>'+escapeHtml(r.name)+'</strong><span class="hint-small" style="margin:0;">'+turnos+'</span></div><button data-action="remove-reposicao" data-id="'+r.id+'">Excluir</button></div>';
     }).join('');
   }
@@ -1694,11 +1818,14 @@
 
   function removeReposicao(day,id){
     var sched=state.schedule[day];
-    if(sched){ Object.keys(sched).forEach(function(pid){ sched[pid]=sched[pid].map(function(v){ return v==='REP:'+id ? 'AUSENTE' : v; }); }); }
+    if(sched){ Object.keys(sched).forEach(function(pid){ sched[pid]=sched[pid].map(function(v){ return v==='REP:'+id ? 'SENIOR' : v; }); }); }
     state.reposicoes[day]=(state.reposicoes[day]||[]).filter(function(r){ return r.id!==id; });
   }
 
-  function renderRodizio(){ renderDayEfficiency(); renderRodizioGrids(); renderAusentes(); renderReposicoes(); if(document.getElementById('page-dashboard').classList.contains('active')) renderDashboard(); }
+  function renderRodizio(){
+    var weekInput=document.getElementById('rodizio-week-start');if(weekInput)weekInput.value=state.weekStart;
+    var dateLabel=document.getElementById('rodizio-date-label');if(dateLabel)dateLabel.textContent=dayLabel(currentDay)+' · '+prettyDate(dateForDay(currentDay));
+    renderLongAbsences(); renderDayEfficiency(); renderRodizioGrids(); renderAusentes(); renderReposicoes(); if(document.getElementById('page-dashboard').classList.contains('active')) renderDashboard(); }
 
   function renderSetorSelector(){
     saveStateToLocalStorage();
@@ -1725,7 +1852,7 @@
       var items = posts.map(function(p){
         return '<label class="chk"><input type="checkbox" value="'+p.id+'"> '+escapeHtml(p.name)+'</label>';
       }).join('');
-      return '<div class="area-group"><h4>'+escapeHtml(setor.name)+'</h4>'+items+'</div>';
+      return '<div class="area-group '+sectorTheme(setor)+'"><h4>'+escapeHtml(setor.name)+'</h4>'+items+'</div>';
     }).join('');
   }
 
@@ -1774,10 +1901,12 @@
       return '<div class="list-item '+(isOpen?'open':'')+'">'+
         '<div class="list-item-head">'+
           '<strong>'+escapeHtml(e.name)+'</strong>'+
+          (isOnLeave(e.id,currentDay)?'<span class="coverage-warning">Afastado</span>':'')+
           (e.restritoVerde ? '<span class="crit-badge crit-verde">🟢 Só verde</span>' : '')+
           '<span class="mini-count">'+e.postIds.length+' posto'+(e.postIds.length===1?'':'s')+'</span>'+
           '<button class="restrict-toggle'+(e.restritoVerde?' active':'')+'" data-action="toggle-restricao" data-emp="'+e.id+'" title="Quando ativado, o funcionário só é escalado em postos verdes">Restrito</button>'+
           '<button class="icon-edit" data-action="toggle-func" data-emp="'+e.id+'">'+(isOpen?'✕ Fechar':'✏️ Editar')+'</button>'+
+          '<button class="btn ghost" data-action="manage-leave" data-emp="'+e.id+'">Afastamento</button>'+
           '<button class="del" data-action="delete-emp" data-emp="'+e.id+'">Excluir</button>'+
         '</div>'+
         body+
@@ -1822,7 +1951,7 @@
         '<div class="list-item-head">'+
           '<span class="crit-dot crit-'+p.criticidade+'"></span>'+
           '<strong>'+escapeHtml(p.name)+'</strong>'+
-          '<span class="setor-badge">'+(setor?escapeHtml(setor.name):'—')+'</span>'+
+          '<span class="setor-badge sector-tag '+sectorTheme(setor)+'">'+(setor?escapeHtml(setor.name):'—')+'</span>'+
           '<button class="icon-edit" data-action="toggle-posto" data-post="'+p.id+'">'+(isOpen?'✕ Fechar':'✏️ Editar')+'</button>'+
           '<button class="del" data-action="delete-post" data-post="'+p.id+'">Excluir</button>'+
         '</div>'+
@@ -1986,20 +2115,20 @@
     if(!state.formacoes.length){ container.innerHTML = '<p class="empty-msg">Nenhuma formação registrada.</p>'; return; }
     function empOpts(sel){ return state.employees.map(function(e){ return '<option value="'+e.id+'" '+(e.id===sel?'selected':'')+'>'+escapeHtml(e.name)+'</option>'; }).join(''); }
     function postOpts(sel){ return state.posts.map(function(p){ return '<option value="'+p.id+'" '+(p.id===sel?'selected':'')+'>'+escapeHtml(p.name)+'</option>'; }).join(''); }
-    function turnoOpts(sel){ return [0,1,2].map(function(c){ return '<option value="'+c+'" '+(c===sel?'selected':'')+'>'+(c+1)+'º</option>'; }).join(''); }
+    function turnoOpts(sel){ return [0,1,2].map(function(c){ return '<option value="'+c+'" '+(c===sel?'selected':'')+'>'+(c+1)+'º rodízio</option>'; }).join(''); }
     container.innerHTML = state.formacoes.map(function(f){
       var trainee = findEmployee(f.traineeId), trainer = findEmployee(f.trainerId), post = findPost(f.postId);
       return '<div class="list-item">'+
         '<div class="list-item-head">'+
-          '<strong>'+(trainee?escapeHtml(trainee.name):'—')+' / '+(trainer?escapeHtml(trainer.name):'—')+'</strong>'+
+          '<span class="formation-badge">Em formação</span><strong>'+(trainee?escapeHtml(trainee.name):'—')+' / '+(trainer?escapeHtml(trainer.name):'—')+'</strong>'+
           '<span class="setor-badge">'+(post?escapeHtml(post.name):'—')+'</span>'+
-          '<span class="mini-count">'+(f.col+1)+'º turno</span>'+
+          '<span class="mini-count">'+(f.col+1)+'º rodízio</span>'+
           '<button class="del" data-action="delete-formacao" data-formacao="'+f.id+'">Excluir</button>'+
         '</div>'+
         '<div class="formacao-edit-grid">'+
           '<label>Aprendiz<select data-action="edit-formacao" data-field="traineeId" data-formacao="'+f.id+'">'+empOpts(f.traineeId)+'</select></label>'+
           '<label>Posto<select data-action="edit-formacao" data-field="postId" data-formacao="'+f.id+'">'+postOpts(f.postId)+'</select></label>'+
-          '<label>Turno<select data-action="edit-formacao" data-field="col" data-formacao="'+f.id+'">'+turnoOpts(f.col)+'</select></label>'+
+          '<label>Rodízio<select data-action="edit-formacao" data-field="col" data-formacao="'+f.id+'">'+turnoOpts(f.col)+'</select></label>'+
           '<label>Instrutor<select data-action="edit-formacao" data-field="trainerId" data-formacao="'+f.id+'">'+empOpts(f.trainerId)+'</select></label>'+
         '</div>'+
       '</div>';
@@ -2016,7 +2145,7 @@
     }).join('');
     showModal(
       '<span class="modal-close" data-action="close">✕</span>'+
-      '<h3>'+escapeHtml(post.name)+' <span class="setor-badge">'+(setor?escapeHtml(setor.name):'—')+'</span> <span class="factory-badge '+(setor?setor.factory.toLowerCase():'')+'">'+(setor?setor.factory:'')+'</span> <span class="crit-badge crit-'+post.criticidade+'">'+critLabel(post.criticidade)+'</span></h3>'+
+      '<h3>'+escapeHtml(post.name)+' <span class="setor-badge sector-tag '+sectorTheme(setor)+'">'+(setor?escapeHtml(setor.name):'—')+'</span> <span class="factory-badge '+(setor?setor.factory.toLowerCase():'')+'">'+(setor?setor.factory:'')+'</span> <span class="crit-badge crit-'+post.criticidade+'">'+critLabel(post.criticidade)+'</span></h3>'+
       '<p class="modal-hint">Funcionários aptos para este posto (marque ou desmarque para atualizar):</p>'+
       '<div class="modal-list">'+rows+'</div>'
     );
@@ -2028,8 +2157,7 @@
     var n = slotCount(day);
     if(!state.schedule[day]) state.schedule[day] = emptyStructureFor(day);
     var sched = state.schedule[day];
-    var absentSet = {};
-    (state.absentees[day]||[]).forEach(function(id){ if(id) absentSet[id]=true; });
+    var absentSet = absenceSetFor(day);
     var usedThisCol = {};
     state.posts.forEach(function(p){
       var occ = resolveOccupant(sched[p.id][col]);
@@ -2043,22 +2171,22 @@
     var rows = qualified.map(function(e){
       var status = 'Disponível', blocked = false;
       if(e.id===currentVal){ status = 'Atual neste posto'; }
-      else if(absentSet[e.id]){ status = 'Ausente hoje'; blocked = true; }
+      else if(absentSet[e.id]){ status = isOnLeave(e.id,day)?'Afastado neste dia':'Ausente neste dia'; blocked = true; }
       else if(e.restritoVerde && post.criticidade!=='verde'){ status = 'Restrito a postos verdes'; blocked = true; }
       else if(post.criticidade==='vermelho' && hasHeavyAssignment(day,e.id,postId,col)){ status = 'Já fez posto pesado neste dia'; blocked = true; }
-      else if(usedThisCol[e.id]){ status = 'Em outro posto neste turno'; blocked = true; }
-      else if(e.id===prevOccupant || e.id===nextOccupant){ status = 'Mesmo posto em turno adjacente'; blocked = true; }
+      else if(usedThisCol[e.id]){ status = 'Em outro posto neste rodízio'; blocked = true; }
+      else if(e.id===prevOccupant || e.id===nextOccupant){ status = 'Mesmo posto em rodízio adjacente'; blocked = true; }
       var btn = blocked ? '' : '<button data-action="pick-assign" data-day="'+day+'" data-post="'+postId+'" data-col="'+col+'" data-emp="'+e.id+'">Selecionar</button>';
       return '<div class="modal-row assign-row"><span>'+escapeHtml(e.name)+'</span><span class="status '+(blocked?'blocked':'ok')+'">'+status+'</span>'+btn+'</div>';
     }).join('') || '<p class="modal-hint">Nenhum funcionário cadastrado para este posto ainda.</p>';
 
     showModal(
       '<span class="modal-close" data-action="close">✕</span>'+
-      '<h3>'+escapeHtml(post.name)+' · '+(col+1)+'º turno</h3>'+
+      '<h3>'+escapeHtml(post.name)+' · '+(col+1)+'º rodízio</h3>'+
       '<p class="modal-hint">Selecione quem assume este posto:</p>'+
       '<div class="modal-list">'+rows+'</div>'+
       '<div class="modal-footer-actions">'+
-        '<button class="btn ghost" data-action="mark-ausente" data-day="'+day+'" data-post="'+postId+'" data-col="'+col+'">Marcar Ausente</button>'+
+        '<button class="btn ghost" data-action="mark-ausente" data-day="'+day+'" data-post="'+postId+'" data-col="'+col+'">Indicar cobertura por Sênior</button>'+
         '<button class="btn ghost" data-action="clear-cell" data-day="'+day+'" data-post="'+postId+'" data-col="'+col+'">Limpar</button>'+
       '</div>'
     );
@@ -2105,7 +2233,7 @@
       '<h3>⚠ Atenção</h3>'+
       '<p class="modal-hint">Não foi possível encaixar '+(leftover.length>1?'os seguintes funcionários':'o seguinte funcionário')+' no rodízio de '+dayLabel(day)+':</p>'+
       '<div class="modal-list">'+leftover.map(function(n){ return '<div class="modal-row"><span>'+escapeHtml(n)+'</span></div>'; }).join('')+'</div>'+
-      '<p class="hint-small">Costuma acontecer quando o funcionário tem poucos postos cadastrados ou todos os seus postos já estão ocupados/travados nesse turno. Cadastre mais postos para ele na aba Formação ou Cadastro.</p>'
+      '<p class="hint-small">Costuma acontecer quando o funcionário tem poucos postos cadastrados ou todos os seus postos já estão ocupados/travados nesse rodízio. Cadastre mais postos para ele na aba Formação ou Cadastro.</p>'
     );
   }
 
@@ -2121,9 +2249,9 @@
 
   function drawSetorBlock(ctx, setor, x, y, width, sched, n){
     var posts = state.posts.filter(function(p){ return p.setorId===setor.id; });
-    ctx.fillStyle = '#eafaf6';
+    ctx.fillStyle = sectorTheme(setor)==='setor-sc5'?'#eee6ff':'#e4edff';
     ctx.fillRect(x, y, width, IMG_TITLE_H);
-    ctx.fillStyle = '#1c4fb0';
+    ctx.fillStyle = sectorTheme(setor)==='setor-sc5'?'#5b21b6':'#1e40af';
     ctx.font = '700 15px "Space Grotesk", sans-serif';
     ctx.fillText(setor.name.toUpperCase()+'  ·  '+setor.factory, x+10, y+20);
 
@@ -2135,8 +2263,8 @@
     ctx.fillRect(x, tableY, width, IMG_HEADER_H);
     ctx.fillStyle = '#33506b';
     ctx.font = '700 11px "Space Grotesk", sans-serif';
-    ctx.fillText('QUA', x+8, tableY+17);
-    for(var c=0;c<n;c++){ ctx.fillText((c+1)+'º', x+colPostWidth + c*colTurnoWidth + 8, tableY+17); }
+    ctx.fillText(dayLabel(currentDay).slice(0,3).toUpperCase(), x+8, tableY+17);
+    for(var c=0;c<n;c++){ ctx.fillText((c+1)+'º rodízio', x+colPostWidth + c*colTurnoWidth + 8, tableY+17); }
 
     var rowY = tableY + IMG_HEADER_H;
     if(!posts.length){
@@ -2156,9 +2284,9 @@
         var cellX = x+colPostWidth + c*colTurnoWidth;
         var text, color, font;
         if(val==='AUSENTE' || val==='SENIOR'){
-          ctx.fillStyle='#ff5c5c';
+          ctx.fillStyle=val==='SENIOR'?'#ffcc33':'#ff5c5c';
           ctx.fillRect(cellX+2, rowY+2, colTurnoWidth-4, IMG_ROW_H-4);
-          text='Ausente'; color='#ffffff'; font='700 11px "Inter", sans-serif';
+          text=val==='SENIOR'?'Sênior a definir':'Ausente'; color=val==='SENIOR'?'#5c4200':'#ffffff'; font='700 11px "Inter", sans-serif';
         } else if(typeof val==='string' && val.indexOf('REP:')===0){
           var rep = findReposicao(currentDay, val.slice(4));
           ctx.fillStyle = rep && rep.type==='EMPRESTIMO' ? '#8b5cf6' : '#ffcc33';
@@ -2166,13 +2294,13 @@
           text = rep ? rep.name : 'Ausente'; color = rep && rep.type==='EMPRESTIMO' ? '#ffffff' : '#5c4200'; font='700 11px "Inter", sans-serif';
         } else if(typeof val==='string' && val.indexOf('FORM:')===0){
           var f = findFormacao(val.slice(5));
-          ctx.fillStyle='#e7edff';
+          ctx.fillStyle='#ffedd5';
           ctx.fillRect(cellX+2, rowY+2, colTurnoWidth-4, IMG_ROW_H-4);
           if(f){
             var trainee = findEmployee(f.traineeId), trainer = findEmployee(f.trainerId);
             text = (trainee?trainee.name:'?')+'/'+(trainer?trainer.name:'?');
           } else { text='Formação'; }
-          color='#1c4fb0'; font='700 10px "Inter", sans-serif';
+          color='#9a3412'; font='700 10px "Inter", sans-serif';
         } else if(val){
           var emp = findEmployee(val);
           text = emp ? emp.name : '—'; color='#0d1526'; font='500 12px "Inter", sans-serif';
@@ -2191,7 +2319,7 @@
 
   function buildRodizioImage(){
     var day = currentDay;
-    var visible = state.setores.filter(function(s){ return state.selectedSetorIds.indexOf(s.id)!==-1; });
+    var visible = state.setores.filter(function(s){ return state.selectedSetorIds.indexOf(s.id)!==-1; }).sort(function(a,b){ var order={MOX:0,SC5:1}; var av=order[String(a.name).trim().toUpperCase()],bv=order[String(b.name).trim().toUpperCase()]; return (av==null?2:av)-(bv==null?2:bv); });
     if(!visible.length){ showToast('Selecione ao menos um setor para exportar.'); return null; }
     var n = slotCount(day);
     var sched = state.schedule[day];
@@ -2260,6 +2388,7 @@
   }
 
   function exportRodizioImage(){
+    sanitizeLeaveAssignments();
     if(heavyViolations(currentDay)){ showToast('Corrija a repetição de posto pesado antes de exportar.'); return; }
     var canvas = buildRodizioImage();
     if(!canvas) return;
@@ -2299,6 +2428,7 @@
   function downloadBackupRodizio(label){
     var payload = {
       type: 'rodizio-backup',
+      weekStart: state.weekStart,
       label: label || '',
       schedule: state.schedule,
       absentees: state.absentees,
@@ -2326,6 +2456,7 @@
   function downloadBackupCompleto(label){
     var payload = {
       type: 'completo-backup',
+      weekStart: state.weekStart,
       label: label || '',
       posts: state.posts,
       employees: state.employees,
@@ -2368,6 +2499,7 @@
         var data = JSON.parse(ev.target.result);
         if(!data || typeof data !== 'object') throw new Error('invalid');
         var touched = [];
+        if(dateIsValid(data.weekStart))state.weekStart=mondayOf(data.weekStart);
         if(Array.isArray(data.posts)){
           state.posts = data.posts;
           state.posts.forEach(function(p){ if(!p.criticidade) p.criticidade='verde'; if(!p.epis) p.epis=[]; });
@@ -2390,6 +2522,8 @@
         if(data.formacaoDismissed) state.formacaoDismissed = data.formacaoDismissed;
         if(data.reposicoes){ state.reposicoes = data.reposicoes; DAYS.forEach(function(d){ if(!state.reposicoes[d.id]) state.reposicoes[d.id]=[]; }); touched.push('reposições'); }
         if(!touched.length){ showToast('Arquivo de backup vazio ou inválido.'); return; }
+        alignKnownPostSectors();
+        sanitizeLeaveAssignments();
         expandedFuncionarios = {}; expandedPostos = {}; expandedSetores = {};
         renderAllSetorDependent();
         renderAusentes();
@@ -2415,7 +2549,41 @@
     var max=Math.max.apply(null,items.map(function(x){return x.value;}).concat([1]));
     el.innerHTML=items.map(function(x){return '<div class="bar-row" title="'+escapeHtml(x.label)+': '+x.value+'"><span class="bar-label">'+escapeHtml(x.label)+'</span><div class="bar-track"><div class="bar-fill" style="width:'+(x.value/max*100).toFixed(1)+'%"></div></div><span class="bar-value">'+x.value+'</span></div>';}).join('') || '<p class="empty-msg">Sem dados.</p>';
   }
+  function coverageByPost(){
+    var tablePending=[['Cleber','12D'],['Willian','01C'],['Alexandre','06D'],['Daiane','7E']];
+    return state.posts.map(function(post){
+      var qualified=state.employees.filter(function(emp){return (emp.postIds||[]).indexOf(post.id)!==-1;});
+      var pendingIds={};
+      state.formacoes.forEach(function(f){if(f.postId===post.id) pendingIds[f.traineeId]=true;});
+      tablePending.forEach(function(pair){
+        if(pair[1]!==post.name) return;
+        state.employees.filter(function(emp){return emp.name===pair[0];}).forEach(function(emp){pendingIds[emp.id]=true;});
+      });
+      var pending=state.employees.filter(function(emp){return pendingIds[emp.id] && (emp.postIds||[]).indexOf(post.id)===-1;});
+      var setor=findSetor(post.setorId);
+      var available=qualified.filter(function(emp){return !absenceSetFor(currentDay)[emp.id];});
+      return {availableCount:available.length,availableNames:available.map(function(e){return e.name;}),post:post,setor:setor?setor.name:'—',count:qualified.length,names:qualified.map(function(emp){return emp.name;}).sort(function(a,b){return a.localeCompare(b,'pt-BR');}),pending:pending.map(function(emp){return emp.name;}).sort(function(a,b){return a.localeCompare(b,'pt-BR');})};
+    }).sort(function(a,b){return a.count-b.count || a.post.name.localeCompare(b.post.name,'pt-BR');});
+  }
+  function renderCoverage(){
+    var body=document.getElementById('coverage-rows'); if(!body) return;
+    var targetInput=document.getElementById('coverage-target');
+    var target=Math.max(1,Math.min(999,Math.floor(Number(targetInput.value)||6)));
+    var q=document.getElementById('coverage-search').value.toLocaleLowerCase('pt-BR').trim();
+    var all=coverageByPost();
+    var rows=all.filter(function(row){return !q || [row.post.name,row.setor].concat(row.names,row.pending).join(' ').toLocaleLowerCase('pt-BR').indexOf(q)!==-1;});
+    var zero=all.filter(function(row){return row.count===0;}).length;
+    var below=all.filter(function(row){return row.count<target;}).length;
+    document.getElementById('coverage-summary').innerHTML='<span class="chip">'+all.length+' postos</span><span class="chip">'+below+' abaixo da meta de '+target+'</span><span class="chip">'+zero+' sem habilitados</span><span class="chip">Disponibilidade: '+dayLabel(currentDay)+' '+prettyDate(dateForDay(currentDay))+'</span>';
+    body.innerHTML=rows.map(function(row){
+      var gap=Math.max(0,target-row.count);
+      var status=row.count===0?'Sem habilitados':gap?'Faltam '+gap:'Meta atingida';
+      return '<tr><td><strong>'+escapeHtml(row.post.name)+'</strong><div><span class="sector-tag '+sectorTheme({name:row.setor})+'">'+escapeHtml(row.setor)+'</span></div></td><td class="coverage-count">'+row.count+'</td><td>'+escapeHtml(row.names.join(' · ') || 'Nenhum operador habilitado')+'</td><td><strong>'+row.availableCount+'</strong><div class="hint-small" style="margin:0">'+escapeHtml(row.availableNames.join(' · ') || 'Nenhum disponível')+'</div></td><td>'+(row.pending.length?'<span class="formation-badge">Em formação · '+escapeHtml(row.pending.join(' · '))+'</span>':'—')+'</td><td><span class="coverage-warning '+(row.count===0?'coverage-empty':gap?'':'coverage-ready')+'">'+status+'</span></td></tr>';
+    }).join('') || '<tr><td colspan="6">Nenhum posto encontrado.</td></tr>';
+  }
+
   function renderDashboard(){
+    renderCoverage();
     var wk=weekMetrics(), e=document.getElementById('dashboard-week-efficiency');
     if(e){
       var h='<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:14px 0 8px"><div><div class="hint-small" style="margin:0">Eficiência geral da semana</div><div style="font:800 2.35rem var(--font-display);color:#0d3b66">'+Math.round(wk.score)+'%</div></div><div class="hint-small" style="margin:0">'+wk.absent+' ausência(s) · '+wk.emprestimo+' empréstimo(s) · '+wk.senior+' sênior(es)</div></div>';
@@ -2445,6 +2613,16 @@
 
   document.addEventListener('DOMContentLoaded', function(){
     loadStateFromLocalStorage();
+    alignKnownPostSectors();
+    sanitizeLeaveAssignments();
+    document.getElementById('rodizio-week-start').addEventListener('change',function(){
+      var value=this.value;if(!dateIsValid(value)){this.value=state.weekStart;return;}value=mondayOf(value);
+      if(value===state.weekStart){this.value=value;return;}
+      if(!confirm('Mudar a semana limpa o rodízio, as ausências do dia e as reposições atuais. Será baixado um backup antes. Continuar?')){this.value=state.weekStart;return;}
+      downloadBackupCompleto('antes-de-mudar-a-semana');state.weekStart=value;
+      DAYS.forEach(function(d){state.schedule[d.id]=emptyStructureFor(d.id);state.absentees[d.id]=[null,null,null,null,null,null];state.reposicoes[d.id]=[];});
+      saveStateToLocalStorage();renderRodizio();renderDashboard();
+    });
     renderFuncPostosCheckboxes();
     renderPostoSetorOptions();
     renderSetorChipsCadastro();
@@ -2479,6 +2657,8 @@
       setTimeout(function(){ var left=generateBestWeek(); btn.disabled=false; btn.textContent=old; showToast('Semana otimizada · eficiência '+Math.round(weekMetrics().score)+'%'); if(left.length) console.warn('Sem encaixe:',left); },40);
     });
     document.getElementById('dashboard-post-search').addEventListener('input', renderDashboard);
+    document.getElementById('coverage-search').addEventListener('input', renderCoverage);
+    document.getElementById('coverage-target').addEventListener('input', renderCoverage);
     document.getElementById('btn-copiar').addEventListener('click', openSaveModal);
     document.getElementById('btn-add-reposicao').addEventListener('click', openReposicaoModal);
     document.getElementById('btn-limpar').addEventListener('click', function(){
@@ -2528,6 +2708,7 @@
             e.target.value = '';
             return;
           }
+          if(dateIsValid(data.weekStart))state.weekStart=mondayOf(data.weekStart);
           state.schedule = data.schedule || {};
           state.absentees = data.absentees || {};
           DAYS.forEach(function(d){ if(!state.absentees[d.id]) state.absentees[d.id] = [null,null,null,null,null,null]; });
@@ -2574,6 +2755,8 @@
           if(!state.selectedSetorIds || !state.selectedSetorIds.length){
             state.selectedSetorIds = state.setores.map(function(s){ return s.id; });
           }
+          alignKnownPostSectors();
+          sanitizeLeaveAssignments();
           expandedFuncionarios = {};
           expandedPostos = {};
           renderAllSetorDependent();
@@ -2686,6 +2869,7 @@
       var col = parseInt(document.getElementById('formacao-turno').value,10);
       var trainerId = document.getElementById('formacao-instrutor').value;
       if(!traineeId || !postId || !trainerId){ showToast('Preencha todos os campos.'); return; }
+      if(WEEKDAYS.some(function(day){return isOnLeave(traineeId,day)||isOnLeave(trainerId,day);})){showToast('Aprendiz ou instrutor está afastado em parte desta semana. Registre a formação após o retorno.');return;}
       if(traineeId===trainerId){ showToast('O aprendiz e o instrutor devem ser diferentes.'); return; }
       var formacaoPost = findPost(postId);
       var formacaoTrainee = findEmployee(traineeId), formacaoTrainer = findEmployee(trainerId);
@@ -2747,6 +2931,7 @@
       var t = e.target.closest('[data-action]');
       if(!t) return;
       var action = t.dataset.action;
+      if(action==='manage-leave'){openLeaveModal(t.dataset.emp);return;}
       if(action==='toggle-func'){
         var fid = t.dataset.emp;
         expandedFuncionarios[fid] = !expandedFuncionarios[fid];
@@ -2779,7 +2964,7 @@
           var sched = state.schedule[d.id];
           if(sched){
             Object.keys(sched).forEach(function(pid){
-              sched[pid] = sched[pid].map(function(v){ return v===id ? 'AUSENTE' : v; });
+              sched[pid] = sched[pid].map(function(v){ return v===id ? 'SENIOR' : v; });
             });
           }
           state.absentees[d.id] = state.absentees[d.id].map(function(v){ return v===id ? null : v; });
@@ -2858,6 +3043,17 @@
       var t = e.target.closest('[data-action]');
       if(!t) return;
       var action = t.dataset.action;
+      if(action==='save-leave'){
+        var error=addEmployeeLeave(t.dataset.emp,document.getElementById('leave-start').value,document.getElementById('leave-end').value,document.getElementById('leave-reason').value);
+        if(error){showToast(error);return;}closeModal();renderListaFuncionarios();renderRodizio();renderDashboard();showToast('Afastamento salvo. O operador fica fora do período informado.');return;
+      }
+      if(action==='return-leave'){
+        var error=registerLeaveReturn(t.dataset.emp,t.dataset.leave,todayISO());if(error){showToast(error);return;}closeModal();renderListaFuncionarios();renderRodizio();renderDashboard();showToast('Retorno registrado. Gere o rodízio para preencher as vagas.');return;
+      }
+      if(action==='cancel-leave'){
+        var emp=findEmployee(t.dataset.emp);var record=(emp.afastamentos || []).filter(function(a){return a.id===t.dataset.leave;})[0];
+        if(record && record.inicio>todayISO()){record.cancelado=true;saveStateToLocalStorage();closeModal();renderListaFuncionarios();renderRodizio();renderDashboard();showToast('Período cancelado.');}return;
+      }
       if(action==='backup-antes-tabela'){ downloadBackupCompleto('antes-do-cadastro-da-tabela'); document.getElementById('confirmar-tabela').disabled=false; return; }
       if(action==='aplicar-tabela'){
         if(document.getElementById('confirmar-tabela').disabled) return;
@@ -2871,12 +3067,13 @@
       }
       if(action==='close'){ closeModal(); return; }
       if(action==='pick-assign'){
+        if(absenceSetFor(t.dataset.day)[t.dataset.emp]){showToast('Operador ausente ou afastado neste dia.');return;}
         var selectedPost=findPost(t.dataset.post);
         if(selectedPost && selectedPost.criticidade==='vermelho' && hasHeavyAssignment(t.dataset.day,t.dataset.emp,t.dataset.post,parseInt(t.dataset.col,10))){ showToast('Este operador já tem um posto pesado neste dia.'); return; }
         state.schedule[t.dataset.day][t.dataset.post][parseInt(t.dataset.col,10)] = t.dataset.emp;
         closeModal(); renderRodizioGrids();
       } else if(action==='mark-ausente'){
-        state.schedule[t.dataset.day][t.dataset.post][parseInt(t.dataset.col,10)] = 'AUSENTE';
+        state.schedule[t.dataset.day][t.dataset.post][parseInt(t.dataset.col,10)] = 'SENIOR';
         closeModal(); renderRodizioGrids();
       } else if(action==='clear-cell'){
         state.schedule[t.dataset.day][t.dataset.post][parseInt(t.dataset.col,10)] = null;
@@ -2887,6 +3084,8 @@
         var nrep=slotCount(currentDay), postIds=[];
         for(var rc=0;rc<3;rc++){ var sel=document.getElementById('rep-post-'+rc); postIds.push(sel && rc<nrep ? sel.value : ''); }
         if(!name){ showToast('Informe o nome da reposição.'); return; }
+        var registered=state.employees.filter(function(e){return e.name.toLocaleLowerCase('pt-BR')===name.toLocaleLowerCase('pt-BR');})[0];
+        if(registered && absenceSetFor(currentDay)[registered.id]){showToast('Esse operador está ausente ou afastado neste dia.');return;}
         var heavyRepCount=postIds.filter(function(pid){ var p=findPost(pid); return p && p.criticidade==='vermelho'; }).length;
         var existingHeavy=heavyCounts(currentDay)['reposicao:'+name.toLowerCase()]||0;
         if(heavyRepCount+existingHeavy>1){ showToast('A reposição só pode fazer um posto pesado por dia.'); return; }
