@@ -1,7 +1,7 @@
-// Rodízio RGdB - Service Worker v24
+// Rodízio RGdB - Service Worker v28
 // Objetivo: sempre buscar a versão mais nova quando houver rede e manter fallback offline confiável.
 const CACHE_PREFIX = 'rodizio-rgdb-';
-const CACHE_NAME = CACHE_PREFIX + 'shell-20261014-v24';
+const CACHE_NAME = CACHE_PREFIX + 'shell-20261014-v28';
 const APP_SHELL = ['./index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', event => {

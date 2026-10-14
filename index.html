@@ -339,6 +339,18 @@
   .coverage-warning{display:inline-block;padding:3px 8px;border-radius:6px;background:#fff0d4;color:#714900;}
   .coverage-empty{background:#fdeceb;color:#b13a2f;}
   .coverage-ready{background:#e7efff;color:#1e3a8a;}
+  .bar-button{width:100%;border:0;background:transparent;color:inherit;text-align:left;font:inherit;padding:5px 4px;border-radius:8px;cursor:pointer;}
+  .bar-button:hover,.bar-button:focus-visible,.coverage-table tr[data-action]:hover,.coverage-table tr[data-action]:focus-visible,.post-detail-button:hover,.post-detail-button:focus-visible{background:#e7efff;outline:2px solid #93b5f5;outline-offset:1px;}
+  .bar-button.crit-bar-vermelho .bar-fill{background:#d83f48;}
+  .bar-button.crit-bar-amarelo .bar-fill{background:#e1a800;}
+  .bar-button.crit-bar-verde .bar-fill{background:#18a672;}
+  .coverage-table tr[data-action]{cursor:pointer;}
+  .coverage-chip{border:1px solid #d7e2ea;cursor:pointer;font:inherit;}
+  .coverage-chip:hover,.coverage-chip:focus-visible{outline:2px solid #93b5f5;background:#e7efff;}
+  .post-detail-button{width:100%;display:block;text-align:left;cursor:pointer;font:inherit;color:inherit;}
+  .detail-links{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 15px;}
+  .detail-links button{border:1px solid #c9d9eb;border-radius:8px;background:#f3f7ff;padding:7px 10px;color:#17416c;font:inherit;cursor:pointer;}
+  .detail-links button:hover,.detail-links button:focus-visible{background:#dce9ff;outline:2px solid #93b5f5;}
 
   .sector-tag{display:inline-block;padding:3px 9px;border-radius:6px;font-size:.75rem;font-weight:700;}
   .sector-tag.setor-mox,.area-title.setor-mox{background:#e4edff;color:#1e40af;border-left:4px solid #2563eb;}
@@ -435,12 +447,13 @@
     <div class="dashboard-grid">
       <section class="card stacked-card">
         <h2>🏆 Ranking de funcionários mais versáteis</h2>
-        <p class="hint-small">Funcionários ordenados pela quantidade de postos em que estão formados.</p>
+        <p class="hint-small">Funcionários ordenados pela quantidade de postos em que estão habilitados. Toque em um nome para ver os postos.</p>
         <div id="chart-employee-versatility" class="bar-chart"></div>
       </section>
       <section class="card stacked-card">
         <h2>🎯 Postos com maior cobertura de formação</h2>
-        <p class="hint-small">Postos ordenados pela quantidade de funcionários habilitados para executá-los.</p>
+        <p class="hint-small">Postos ordenados pela quantidade de funcionários habilitados. Toque em uma barra para ver os nomes e as formações pendentes.</p>
+        <p class="hint-small" style="margin-top:0"><span class="crit-dot crit-vermelho"></span>Vermelho: pesado &nbsp; <span class="crit-dot crit-amarelo"></span>Amarelo: atenção &nbsp; <span class="crit-dot crit-verde"></span>Verde: comum. A classificação pode ser alterada no cadastro do posto.</p>
         <div id="chart-post-trained" class="bar-chart"></div>
       </section>
     </div>
@@ -452,13 +465,18 @@
         <label>Meta SC5 por posto<input type="number" id="coverage-target-sc5" min="1" max="999" step="1" value="8"></label>
         <input type="search" id="coverage-search" class="search-box" placeholder="Buscar posto, setor ou operador..." aria-label="Buscar cobertura por posto">
       </div>
-      <p class="hint-small">As metas são sugestões ajustáveis para ampliar a alternância; a habilitação só entra após concluir a formação. Confira também ausências, restrições e postos vermelhos.</p>
+      <p class="hint-small">Toque nos indicadores e nas linhas da tabela para entender os números e ver os operadores. As metas são sugestões ajustáveis; uma formação só conta após a habilitação. Confira também ausências, restrições e postos vermelhos.</p>
       <div id="coverage-summary" class="coverage-summary"></div>
       <div class="coverage-table-wrap"><table class="coverage-table">
         <thead><tr><th>Posto / setor</th><th>Habilitados</th><th>Quem já faz</th><th>Disponíveis no dia</th><th>Em formação</th><th>Para atingir a meta</th></tr></thead>
         <tbody id="coverage-rows"></tbody>
       </table></div>
       <p class="hint-small">Em formação inclui registros da aba Formação e as pendências da tabela enviada. Revise a conclusão antes de adicionar o posto às habilitações do operador.</p>
+    </section>
+    <section class="card stacked-card">
+      <h2>Passagem de cada operador pelos postos</h2>
+      <p class="hint-small">Acompanhe os postos habilitados que cada pessoa já fez nesta rodada e os que faltam. Ao completar todos, a próxima semana inicia outra rodada. O registro começa ao mudar de semana neste aparelho. Toque no operador para ver os postos.</p>
+      <div id="operator-post-progress" class="post-week-list"></div>
     </section>
     <section class="card stacked-card">
       <h2>Quem passa em cada posto na semana</h2>
@@ -1037,6 +1055,9 @@
     heavySetupVersion: 1,
     qualificationFixVersion: 1,
     heavyHistory: {},
+    visitHistory: {},
+    cycleVisits: {},
+    cycleNumber: 1,
     posts: seedPosts,
     employees: seedEmployees,
     setores: seedSetores,
@@ -1068,6 +1089,9 @@
         heavySetupVersion: state.heavySetupVersion,
         qualificationFixVersion: state.qualificationFixVersion,
         heavyHistory: state.heavyHistory,
+        visitHistory: state.visitHistory,
+        cycleVisits: state.cycleVisits,
+        cycleNumber: state.cycleNumber,
         posts: state.posts,
         employees: state.employees,
         setores: state.setores,
@@ -1094,6 +1118,9 @@
       state.heavySetupVersion=data.heavySetupVersion || 0;
       state.qualificationFixVersion=data.qualificationFixVersion || 0;
       state.heavyHistory=data.heavyHistory && typeof data.heavyHistory==='object' ? data.heavyHistory : {};
+      state.visitHistory=data.visitHistory && typeof data.visitHistory==='object' ? data.visitHistory : {};
+      state.cycleVisits=data.cycleVisits && typeof data.cycleVisits==='object' ? data.cycleVisits : Object.assign({},state.visitHistory);
+      state.cycleNumber=Math.max(1,Math.floor(Number(data.cycleNumber)||1));
       if(Array.isArray(data.posts)) state.posts = data.posts;
       if(Array.isArray(data.employees)) state.employees = data.employees;
       if(Array.isArray(data.setores)) state.setores = data.setores;
@@ -1618,6 +1645,39 @@
     var oldest=addDateDays(state.weekStart,-70);
     Object.keys(state.heavyHistory).forEach(function(date){if(date<oldest)delete state.heavyHistory[date];});
   }
+  function rememberWeekVisits(){
+    if(!state.visitHistory)state.visitHistory={};
+    if(!state.cycleVisits)state.cycleVisits={};
+    DAYS.forEach(function(d){
+      var date=dateForDay(d.id), sched=state.schedule[d.id]||{};
+      state.posts.forEach(function(p){
+        (sched[p.id]||[]).forEach(function(v){
+          // Só registra a passagem efetiva do operador; Sênior e reposição não contam.
+          var e=findEmployee(v);
+          if(e && (e.postIds||[]).indexOf(p.id)!==-1){
+            var key=e.id+'|'+p.id;
+            if(!state.visitHistory[key] || state.visitHistory[key]<date)state.visitHistory[key]=date;
+            if(!state.cycleVisits[key] || state.cycleVisits[key]<date)state.cycleVisits[key]=date;
+          }
+        });
+      });
+    });
+  }
+  function cycleQualifiedPairs(){
+    var keys=[];
+    state.employees.forEach(function(e){(e.postIds||[]).forEach(function(id){
+      if(findPost(id) && keys.indexOf(e.id+'|'+id)===-1)keys.push(e.id+'|'+id);
+    });});
+    return keys;
+  }
+  function startNextCycleIfComplete(){
+    var keys=cycleQualifiedPairs();
+    if(keys.length && keys.every(function(k){return !!(state.cycleVisits||{})[k];})){
+      state.cycleVisits={};state.cycleNumber=(state.cycleNumber||1)+1;
+      return true;
+    }
+    return false;
+  }
   function hasHeavyAssignment(day, empId, skipPostId, skipCol, sched){
     return (heavyCounts(day,sched,skipPostId,skipCol)[empId]||0)>0;
   }
@@ -1796,10 +1856,27 @@
     return {excess:excess, concentration:concentration, cost:excess*1000 + concentration};
   }
 
+  function visitRecencyPenalty(empId,postId){
+    var last=(state.visitHistory||{})[empId+'|'+postId];
+    if(!dateIsValid(last) || last>=state.weekStart)return 0;
+    var days=Math.floor((new Date(state.weekStart+'T12:00:00Z')-new Date(last+'T12:00:00Z'))/86400000);
+    return Math.max(0,12-Math.floor(days/7)*2);
+  }
+
+  function pairVarietyScore(pairs){
+    var score=0;
+    Object.keys(pairs).forEach(function(key){
+      // Um posto sem passagem registrada antes desta semana ganha prioridade.
+      score+=100+visitRecencyPenalty.apply(null,key.split('|'))*(-1);
+      if(!(state.cycleVisits||{})[key])score+=15;
+    });
+    return score;
+  }
+
   // Quando toda a equipe está disponível e não há travas, procura uma escala
   // completa por padrões diários de cada operador. O pareamento coluna a coluna
   // não enxerga que Alan/Marcelo precisam reservar o verde entre dois vermelhos.
-  function solveCompleteDay(day, weeklyBase){
+  function solveCompleteDay(day, weeklyBase, required, searchLimit){
     var n=slotCount(day), posts=state.posts, employees=state.employees;
     if(posts.length!==employees.length || posts.length>30 || n>3 || n<2)return null;
     if(Object.keys(absenceSetFor(day)).length || (state.reposicoes[day]||[]).length ||
@@ -1818,11 +1895,13 @@
       });
       var worker=[];
       function add(sequence){
+        if(required && required.empId===e.id && !sequence.some(function(p){return p.id===required.postId;}))return;
         var ids=sequence.map(function(p,col){return col*posts.length+postIndex[p.id];});
         var mask=ids.reduce(function(value,id){return value | (1n<<BigInt(id));},0n);
         var reds=sequence.filter(function(p){return p.criticidade==='vermelho';}).length;
         var cost=reds*3+sequence.reduce(function(value,p,col){
           return value+(weeklyBase && weeklyBase[e.id+'|'+p.id] || 0)*2+
+            visitRecencyPenalty(e.id,p.id)+
             (seenPrevious[e.id+'|'+p.id+'|'+col]?2:0);
         },0)+deterministicRandom();
         var pattern={employee:ei,sequence:sequence.slice(),ids:ids,mask:mask,cost:cost};
@@ -1849,7 +1928,7 @@
     var covered=0n, used=0n, solution=[], nodes=0, full=(1n<<BigInt(cellCount))-1n;
     function search(){
       if(covered===full)return true;
-      if(++nodes>50000)return false;
+      if(++nodes>(searchLimit || 50000))return false;
       var choices=null;
       for(var ei=0;ei<employees.length;ei++){
         if(used&(1n<<BigInt(ei)))continue;
@@ -2032,7 +2111,8 @@
     DAYS.forEach(function(d){state.schedule[d.id]=emptyStructureFor(d.id);});
     var initialLeft=[];
     DAYS.forEach(function(d){
-      var l=generateForDay(d.id,180,{});
+      var earlier=DAYS.slice(0,DAYS.map(function(x){return x.id;}).indexOf(d.id)).map(function(x){return x.id;});
+      var l=generateForDay(d.id,180,{weeklyPairBase:pairCountsFromSchedule(state.schedule,earlier)});
       if(l.length) initialLeft.push(dayLabel(d.id)+': '+l.join(', '));
     });
     bestWeek=deepClone(state.schedule);
@@ -2069,9 +2149,66 @@
     }
 
     state.schedule=bestWeek;
+    improveWeekVariety();
     saveStateToLocalStorage();
     renderRodizio(); renderDashboard();
     return bestLeft;
+  }
+
+  function improveWeekVariety(){
+    // Refinamento com orçamento limitado: cada tentativa força um posto que
+    // ainda não apareceu para um operador, sem perder cobertura ou validade.
+    if(state.employees.length!==state.posts.length || DAYS.some(function(d){
+      return Object.keys(absenceSetFor(d.id)).length || (state.reposicoes[d.id]||[]).length ||
+        (d.id!=='sabado' && state.formacoes.length) || state.posts.some(function(p){return (state.schedule[d.id][p.id]||[]).some(function(v){return !v;});});
+    }))return;
+    var pairs=pairCountsFromSchedule(state.schedule,DAYS.map(function(d){return d.id;}));
+    var missing=[];
+    state.employees.forEach(function(e){
+      var trained=(e.postIds||[]).filter(function(id){return !!findPost(id);});
+      var covered=trained.filter(function(id){return !!pairs[e.id+'|'+id];}).length;
+      trained.forEach(function(id){if(!pairs[e.id+'|'+id])missing.push({empId:e.id,postId:id,ratio:covered/Math.max(1,trained.length)});});
+    });
+    missing.sort(function(a,b){
+      var aSeen=!!(state.cycleVisits||{})[a.empId+'|'+a.postId],bSeen=!!(state.cycleVisits||{})[b.empId+'|'+b.postId];
+      return Number(aSeen)-Number(bSeen) || visitRecencyPenalty(a.empId,a.postId)-visitRecencyPenalty(b.empId,b.postId) || a.ratio-b.ratio || a.empId.localeCompare(b.empId) || a.postId.localeCompare(b.postId);
+    });
+    var tries=0,limit=40;
+    missing.forEach(function(item){
+      if(tries>=limit || pairs[item.empId+'|'+item.postId])return;
+      for(var i=0;i<DAYS.length && tries<limit;i++){
+        var day=DAYS[i].id,otherDays=DAYS.filter(function(d){return d.id!==day;}).map(function(d){return d.id;});
+        tries++;
+        var candidate=solveCompleteDay(day,pairCountsFromSchedule(state.schedule,otherDays),item,600);
+        if(!candidate)continue;
+        var old=state.schedule[day];state.schedule[day]=candidate;
+        var valid=DAYS.every(function(d){return !heavyRestViolations(d.id);}) && !heavyViolations(day) && !sameDayRepeatViolations(day);
+        var updated=valid?pairCountsFromSchedule(state.schedule,DAYS.map(function(d){return d.id;})):null;
+        if(updated && (Object.keys(updated).length>Object.keys(pairs).length ||
+          (Object.keys(updated).length===Object.keys(pairs).length && pairVarietyScore(updated)>pairVarietyScore(pairs)))){pairs=updated;break;}
+        state.schedule[day]=old;
+      }
+    });
+    // Segunda passada: recuperar habilitações ainda sem registro em qualquer semana.
+    // Pode trocar uma combinação repetida desta semana por outra inédita, mesmo
+    // quando isso não aumenta o número de pares distintos nesta semana isolada.
+    var history=state.cycleVisits||{}, attempts=0;
+    var unvisited=missing.filter(function(item){return !history[item.empId+'|'+item.postId];});
+    unvisited.forEach(function(item){
+      if(attempts>=24 || pairs[item.empId+'|'+item.postId])return;
+      for(var i=0;i<DAYS.length && attempts<24;i++){
+        var day=DAYS[i].id,others=DAYS.filter(function(d){return d.id!==day;}).map(function(d){return d.id;});
+        attempts++;
+        var candidate=solveCompleteDay(day,pairCountsFromSchedule(state.schedule,others),item,15000);
+        if(!candidate)continue;
+        var old=state.schedule[day];state.schedule[day]=candidate;
+        var valid=DAYS.every(function(d){return !heavyRestViolations(d.id);}) && !heavyViolations(day) && !sameDayRepeatViolations(day);
+        var updated=valid?pairCountsFromSchedule(state.schedule):null;
+        var novelty=function(counts){return Object.keys(counts).filter(function(k){return !history[k];}).length;};
+        if(updated && novelty(updated)>novelty(pairs)){pairs=updated;break;}
+        state.schedule[day]=old;
+      }
+    });
   }
 
   function reapplyFormacaoLocks(day){
@@ -2903,6 +3040,9 @@
       type: 'rodizio-backup',
       weekStart: state.weekStart,
       heavyHistory: state.heavyHistory,
+      visitHistory: state.visitHistory,
+      cycleVisits: state.cycleVisits,
+      cycleNumber: state.cycleNumber,
       label: label || '',
       schedule: state.schedule,
       absentees: state.absentees,
@@ -2936,6 +3076,9 @@
       heavySetupVersion: state.heavySetupVersion,
       qualificationFixVersion: state.qualificationFixVersion,
       heavyHistory: state.heavyHistory,
+      visitHistory: state.visitHistory,
+      cycleVisits: state.cycleVisits,
+      cycleNumber: state.cycleNumber,
       label: label || '',
       posts: state.posts,
       employees: state.employees,
@@ -2982,6 +3125,9 @@
         state.heavySetupVersion=data.heavySetupVersion || 0;
         state.qualificationFixVersion=data.qualificationFixVersion || 0;
         state.heavyHistory=data.heavyHistory && typeof data.heavyHistory==='object'?data.heavyHistory:{};
+        state.visitHistory=data.visitHistory && typeof data.visitHistory==='object'?data.visitHistory:{};
+        state.cycleVisits=data.cycleVisits && typeof data.cycleVisits==='object'?data.cycleVisits:Object.assign({},state.visitHistory);
+        state.cycleNumber=Math.max(1,Math.floor(Number(data.cycleNumber)||1));
         if(Array.isArray(data.posts)){
           state.posts = data.posts;
           state.posts.forEach(function(p){ if(!p.criticidade) p.criticidade='verde'; if(!p.epis) p.epis=[]; });
@@ -3028,10 +3174,10 @@
   function weeklyEmployeeLoad(){
     var out={}; DAYS.forEach(function(d){ var sched=state.schedule[d.id]||{}; state.posts.forEach(function(p){ (sched[p.id]||[]).forEach(function(v){ var eid=resolveOccupant(v); if(eid) out[eid]=(out[eid]||0)+1; }); }); }); return out;
   }
-  function renderBars(containerId,items){
+  function renderBars(containerId,items,kind){
     var el=document.getElementById(containerId); if(!el) return;
     var max=Math.max.apply(null,items.map(function(x){return x.value;}).concat([1]));
-    el.innerHTML=items.map(function(x){return '<div class="bar-row" title="'+escapeHtml(x.label)+': '+x.value+'"><span class="bar-label">'+escapeHtml(x.label)+'</span><div class="bar-track"><div class="bar-fill" style="width:'+(x.value/max*100).toFixed(1)+'%"></div></div><span class="bar-value">'+x.value+'</span></div>';}).join('') || '<p class="empty-msg">Sem dados.</p>';
+    el.innerHTML=items.map(function(x){return '<button type="button" class="bar-row bar-button'+(kind==='post'?' crit-bar-'+x.criticidade:'')+'" data-action="dashboard-'+kind+'" data-id="'+escapeHtml(x.id)+'" aria-label="Ver '+(kind==='post'?'operadores habilitados para ':'postos de ')+escapeHtml(x.label)+', '+x.value+(kind==='post'?', classificação '+critLabel(x.criticidade):'')+'" title="Toque para ver os detalhes de '+escapeHtml(x.label)+'"><span class="bar-label">'+(kind==='post'?'<span class="crit-dot crit-'+x.criticidade+'" aria-hidden="true"></span> ':'')+escapeHtml(x.label)+'</span><span class="bar-track"><span class="bar-fill" style="display:block;width:'+(x.value/max*100).toFixed(1)+'%"></span></span><span class="bar-value">'+x.value+'</span></button>';}).join('') || '<p class="empty-msg">Sem dados.</p>';
   }
   function coverageByPost(){
     var tablePending=[['Cleber','12D'],['Willian','01C'],['Alexandre','06D'],['Daiane','7E']];
@@ -3046,8 +3192,69 @@
       var pending=state.employees.filter(function(emp){return pendingIds[emp.id] && (emp.postIds||[]).indexOf(post.id)===-1;});
       var setor=findSetor(post.setorId);
       var available=qualified.filter(function(emp){return !absenceSetFor(currentDay)[emp.id];});
-      return {availableCount:available.length,availableNames:available.map(function(e){return e.name;}),post:post,setor:setor?setor.name:'—',count:qualified.length,names:qualified.map(function(emp){return emp.name;}).sort(function(a,b){return a.localeCompare(b,'pt-BR');}),pending:pending.map(function(emp){return emp.name;}).sort(function(a,b){return a.localeCompare(b,'pt-BR');})};
+      return {availableCount:available.length,availableNames:available.map(function(e){return e.name;}),qualifiedIds:qualified.map(function(e){return e.id;}),pendingIds:pending.map(function(e){return e.id;}),post:post,setor:setor?setor.name:'—',count:qualified.length,names:qualified.map(function(emp){return emp.name;}).sort(function(a,b){return a.localeCompare(b,'pt-BR');}),pending:pending.map(function(emp){return emp.name;}).sort(function(a,b){return a.localeCompare(b,'pt-BR');})};
     }).sort(function(a,b){return a.count-b.count || a.post.name.localeCompare(b.post.name,'pt-BR');});
+  }
+  function coverageTargetFor(row){
+    var input=document.getElementById(row.setor.trim().toUpperCase()==='SC5'?'coverage-target-sc5':'coverage-target');
+    return Math.max(1,Math.min(999,Math.floor(Number(input && input.value)||(row.setor.trim().toUpperCase()==='SC5'?8:6))));
+  }
+  function detailPersonLinks(ids){
+    return ids.map(function(id){var e=findEmployee(id);return e?'<button type="button" data-action="dashboard-employee" data-id="'+escapeHtml(id)+'">'+escapeHtml(e.name)+'</button>':'';}).join('');
+  }
+  function openCoverageDetailsModal(postId){
+    var row=coverageByPost().filter(function(x){return x.post.id===postId;})[0];if(!row)return;
+    var target=coverageTargetFor(row),gap=Math.max(0,target-row.count),absent=absenceSetFor(currentDay);
+    var qualified=row.qualifiedIds.slice().sort(function(a,b){return findEmployee(a).name.localeCompare(findEmployee(b).name,'pt-BR');});
+    var available=qualified.filter(function(id){return !absent[id];});
+    var unavailable=qualified.filter(function(id){return absent[id];});
+    showModal('<button type="button" class="modal-close" data-action="close" aria-label="Fechar">✕</button>'+
+      '<h3>Posto '+escapeHtml(row.post.name)+' <span class="sector-tag '+sectorTheme({name:row.setor})+'">'+escapeHtml(row.setor)+'</span></h3>'+
+      '<p class="modal-hint">Classificação: <strong>'+critLabel(row.post.criticidade)+'</strong>. Meta sugerida: '+target+' habilitados. '+(gap?'Faltam '+gap+' para a meta.':'Meta atingida.')+'</p>'+
+      '<h4>Habilitados ('+row.count+')</h4><p class="modal-hint">São os operadores cadastrados como aptos para este posto. Toque em um nome para ver todos os postos dele.</p>'+
+      '<div class="detail-links">'+(detailPersonLinks(qualified)||'Nenhum habilitado.')+'</div>'+
+      '<h4>Disponíveis em '+dayLabel(currentDay)+' ('+available.length+')</h4><div class="detail-links">'+(detailPersonLinks(available)||'Nenhum disponível.')+'</div>'+
+      (unavailable.length?'<p class="modal-hint">Ausentes ou afastados neste dia: '+unavailable.map(function(id){return escapeHtml(findEmployee(id).name);}).join(' · ')+'</p>':'')+
+      '<h4>Em formação ('+row.pendingIds.length+')</h4><p class="modal-hint">Ainda não entram na contagem de habilitados nem na escala automática para este posto. Confirme a conclusão antes de cadastrar a habilitação.</p>'+
+      '<div class="detail-links">'+(detailPersonLinks(row.pendingIds)||'Ninguém registrado em formação para este posto.')+'</div>'+
+      '<p class="modal-hint">A meta ajuda a planejar o treinamento. Ter operadores habilitados não garante cobertura em todos os rodízios: a escala também considera ausências, outros postos e regras dos vermelhos.</p>'+
+      '<div class="modal-footer-actions"><button type="button" class="btn ghost" data-action="dashboard-edit-post" data-id="'+escapeHtml(postId)+'">Gerenciar habilitações</button></div>');
+  }
+  function openEmployeeCoverageModal(empId){
+    var emp=findEmployee(empId);if(!emp)return;
+    var posts=(emp.postIds||[]).map(findPost).filter(Boolean),absent=absenceSetFor(currentDay)[empId];
+    var weekPairs=pairCountsFromSchedule(state.schedule), history=state.visitHistory||{}, cycle=state.cycleVisits||{};
+    var counts={verde:0,amarelo:0,vermelho:0};posts.forEach(function(p){counts[p.criticidade]=(counts[p.criticidade]||0)+1;});
+    var pending=coverageByPost().filter(function(row){return row.pendingIds.indexOf(empId)!==-1;});
+    showModal('<button type="button" class="modal-close" data-action="close" aria-label="Fechar">✕</button>'+
+      '<h3>'+escapeHtml(emp.name)+'</h3><p class="modal-hint">'+posts.length+' posto(s) habilitado(s): '+counts.verde+' verde(s), '+counts.amarelo+' amarelo(s) e '+counts.vermelho+' vermelho(s). '+(absent?'Ausente ou afastado em '+dayLabel(currentDay)+'.':'Disponível no cadastro para '+dayLabel(currentDay)+'.')+'</p>'+
+      '<h4>Rodada '+state.cycleNumber+': passagem pelos postos habilitados</h4><p class="modal-hint">Os registros anteriores começam a contar quando você muda de semana no app. Postos sem registro anterior podem ter sido feitos antes desse acompanhamento.</p><div class="detail-links">'+(posts.map(function(p){var setor=findSetor(p.setorId),key=emp.id+'|'+p.id,when=history[key];return '<button type="button" data-action="dashboard-post" data-id="'+escapeHtml(p.id)+'"><span class="crit-dot crit-'+p.criticidade+'"></span> '+escapeHtml(p.name)+' · '+escapeHtml(setor?setor.name:'—')+' · '+(weekPairs[key]?'Fez nesta semana':cycle[key]?'Fez nesta rodada':when?'Pendente nesta rodada · última vez '+prettyDate(when):'Pendente nesta rodada · sem registro anterior')+'</button>';}).join('')||'Nenhum posto habilitado.')+'</div>'+
+      '<h4>Formação pendente</h4><div class="detail-links">'+(pending.map(function(row){return '<button type="button" data-action="dashboard-post" data-id="'+escapeHtml(row.post.id)+'">'+escapeHtml(row.post.name)+'</button>';}).join('')||'Nenhuma formação pendente registrada.')+'</div>'+
+      '<p class="modal-hint">Só os postos habilitados entram no número do gráfico. Os que estão em formação passam a contar depois que a habilitação for confirmada no cadastro.</p>');
+  }
+  function openCoverageSummaryModal(kind){
+    var rows=coverageByPost(), title='', explanation='';
+    if(kind==='below'){
+      title='Postos abaixo da meta';rows=rows.filter(function(r){return r.count<coverageTargetFor(r);});
+      explanation='A meta MOX/SC5 é ajustável. A diferença mostra quantos novos habilitados faltam para o objetivo de treinamento.';
+    }else if(kind==='sc5'){
+      title='Prioridade SC5';rows=rows.filter(function(r){return r.setor.trim().toUpperCase()==='SC5' && r.count<coverageTargetFor(r);});
+      rows.sort(function(a,b){return (a.post.criticidade==='vermelho'?0:1)-(b.post.criticidade==='vermelho'?0:1) || a.count-b.count;});
+      explanation='SC5 tem prioridade no plano; entre os postos abaixo da meta, os vermelhos aparecem primeiro. A cor mostra a criticidade cadastrada.';
+    }else if(kind==='zero'){
+      title='Postos sem habilitados';rows=rows.filter(function(r){return r.count===0;});
+      explanation='Sem operadores habilitados cadastrados, o posto precisa de formação ou correção no cadastro antes de entrar no rodízio.';
+    }else if(kind==='available'){
+      title='Disponibilidade de '+dayLabel(currentDay);explanation='As listas disponíveis em cada posto descontam ausências e afastamentos registrados para '+prettyDate(dateForDay(currentDay))+'. Um operador pode estar disponível e ainda assim ser escalado em outro posto.';
+    }else{title='Todos os postos';explanation='Toque em um posto para ver os habilitados, os disponíveis no dia e quem ainda está em formação.';}
+    showModal('<button type="button" class="modal-close" data-action="close" aria-label="Fechar">✕</button><h3>'+escapeHtml(title)+' ('+rows.length+')</h3><p class="modal-hint">'+explanation+'</p><div class="detail-links">'+(rows.map(function(r){return '<button type="button" data-action="dashboard-post" data-id="'+escapeHtml(r.post.id)+'">'+escapeHtml(r.post.name)+' · '+r.count+' habilitado(s)'+(r.count<coverageTargetFor(r)?' · faltam '+(coverageTargetFor(r)-r.count):'')+'</button>';}).join('')||'Nenhum posto nesta situação.')+'</div>');
+  }
+  function openDashboardEfficiencyModal(){
+    var w=weekMetrics();
+    showModal('<button type="button" class="modal-close" data-action="close" aria-label="Fechar">✕</button><h3>Eficiência da semana: '+Math.round(w.score)+'%</h3>'+
+      '<p class="modal-hint">A nota começa em 100% e considera repetição do mesmo operador no mesmo posto acima de três vezes na semana, operadores com menos de três postos habilitados, restrições a postos verdes e ausências ou coberturas por Sênior/Empréstimo.</p>'+
+      '<div class="modal-list"><div class="modal-row">'+w.overThree+' passagem(ns) acima da 3ª no mesmo posto</div><div class="modal-row">'+w.underThreeEmployees+' operador(es) com menos de três postos</div><div class="modal-row">'+w.restrictedEmployees+' restrito(s) a postos verdes</div><div class="modal-row">'+w.absent+' ausência(s) sem cobertura</div><div class="modal-row">'+w.senior+' cobertura(s) por Sênior</div><div class="modal-row">'+w.emprestimo+' Empréstimo(s)</div></div>'+
+      '<p class="modal-hint">A nota não garante que todas as vagas estão preenchidas. Confira o rodízio de cada dia e as regras dos postos vermelhos.</p>');
   }
   function renderCoverage(){
     var body=document.getElementById('coverage-rows'); if(!body) return;
@@ -3070,30 +3277,40 @@
     var zero=all.filter(function(row){return row.count===0;}).length;
     var below=all.filter(function(row){return row.count<targetFor(row);}).length;
     var sc5Below=all.filter(function(row){return row.setor.trim().toUpperCase()==='SC5' && row.count<sc5Target;}).length;
-    document.getElementById('coverage-summary').innerHTML='<span class="chip">'+all.length+' postos</span><span class="chip">'+below+' abaixo das metas</span><span class="chip">SC5 prioritário: '+sc5Below+' abaixo de '+sc5Target+'</span><span class="chip">'+zero+' sem habilitados</span><span class="chip">Disponibilidade: '+dayLabel(currentDay)+' '+prettyDate(dateForDay(currentDay))+'</span>';
+    document.getElementById('coverage-summary').innerHTML='<button type="button" class="chip coverage-chip" data-action="dashboard-summary" data-kind="all">'+all.length+' postos</button><button type="button" class="chip coverage-chip" data-action="dashboard-summary" data-kind="below">'+below+' abaixo das metas</button><button type="button" class="chip coverage-chip" data-action="dashboard-summary" data-kind="sc5">SC5 prioritário: '+sc5Below+' abaixo de '+sc5Target+'</button><button type="button" class="chip coverage-chip" data-action="dashboard-summary" data-kind="zero">'+zero+' sem habilitados</button><button type="button" class="chip coverage-chip" data-action="dashboard-summary" data-kind="available">Disponibilidade: '+dayLabel(currentDay)+' '+prettyDate(dateForDay(currentDay))+'</button>';
     body.innerHTML=rows.map(function(row){
       var gap=Math.max(0,targetFor(row)-row.count);
       var status=row.count===0?'Sem habilitados':gap?'Faltam '+gap:'Meta atingida';
-      return '<tr><td><strong>'+escapeHtml(row.post.name)+'</strong><div><span class="sector-tag '+sectorTheme({name:row.setor})+'">'+escapeHtml(row.setor)+'</span></div></td><td class="coverage-count">'+row.count+'</td><td>'+escapeHtml(row.names.join(' · ') || 'Nenhum operador habilitado')+'</td><td><strong>'+row.availableCount+'</strong><div class="hint-small" style="margin:0">'+escapeHtml(row.availableNames.join(' · ') || 'Nenhum disponível')+'</div></td><td>'+(row.pending.length?'<span class="formation-badge">Em formação · '+escapeHtml(row.pending.join(' · '))+'</span>':'—')+'</td><td><span class="coverage-warning '+(row.count===0?'coverage-empty':gap?'':'coverage-ready')+'">'+status+'</span></td></tr>';
+      return '<tr data-action="dashboard-post" data-id="'+escapeHtml(row.post.id)+'" role="button" tabindex="0" aria-label="Ver detalhes do posto '+escapeHtml(row.post.name)+'"><td><strong><span class="crit-dot crit-'+row.post.criticidade+'" aria-hidden="true"></span> '+escapeHtml(row.post.name)+'</strong><div><span class="sector-tag '+sectorTheme({name:row.setor})+'">'+escapeHtml(row.setor)+'</span> · '+critLabel(row.post.criticidade)+'</div></td><td class="coverage-count">'+row.count+'</td><td>'+escapeHtml(row.names.join(' · ') || 'Nenhum operador habilitado')+'</td><td><strong>'+row.availableCount+'</strong><div class="hint-small" style="margin:0">'+escapeHtml(row.availableNames.join(' · ') || 'Nenhum disponível')+'</div></td><td>'+(row.pending.length?'<span class="formation-badge">Em formação · '+escapeHtml(row.pending.join(' · '))+'</span>':'—')+'</td><td><span class="coverage-warning '+(row.count===0?'coverage-empty':gap?'':'coverage-ready')+'">'+status+'</span></td></tr>';
     }).join('') || '<tr><td colspan="6">Nenhum posto encontrado.</td></tr>';
   }
 
   function renderDashboard(){
     renderCoverage();
+    var progress=document.getElementById('operator-post-progress');
+    if(progress){
+      var weekPairs=pairCountsFromSchedule(state.schedule), cycle=state.cycleVisits||{};
+      progress.innerHTML=state.employees.slice().sort(function(a,b){return a.name.localeCompare(b.name,'pt-BR');}).map(function(emp){
+        var ids=(emp.postIds||[]).filter(function(id){return !!findPost(id);});
+        var weekDone=ids.filter(function(id){return !!weekPairs[emp.id+'|'+id];}).length;
+        var recorded=ids.filter(function(id){return !!weekPairs[emp.id+'|'+id] || !!cycle[emp.id+'|'+id];}).length;
+        return '<button type="button" class="post-week-item post-detail-button" data-action="dashboard-employee" data-id="'+escapeHtml(emp.id)+'"><strong>'+escapeHtml(emp.name)+'</strong><span>'+weekDone+'/'+ids.length+' nesta semana · '+recorded+'/'+ids.length+' na rodada '+state.cycleNumber+'</span></button>';
+      }).join('');
+    }
     var wk=weekMetrics(), e=document.getElementById('dashboard-week-efficiency');
     if(e){
-      var h='<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:14px 0 8px"><div><div class="hint-small" style="margin:0">Eficiência geral da semana</div><div style="font:800 2.35rem var(--font-display);color:#0d3b66">'+Math.round(wk.score)+'%</div></div><div class="hint-small" style="margin:0">'+wk.absent+' ausência(s) · '+wk.emprestimo+' empréstimo(s) · '+wk.senior+' sênior(es)</div></div>';
+      var h='<button type="button" class="post-detail-button" data-action="dashboard-efficiency" aria-label="Ver explicação da eficiência da semana" style="border:0;background:transparent;padding:0"><span class="hint-small" style="margin:0">Eficiência geral da semana · toque para entender</span><span style="display:block;font:800 2.35rem var(--font-display);color:#0d3b66">'+Math.round(wk.score)+'%</span><span class="hint-small" style="margin:0">'+wk.absent+' ausência(s) · '+wk.emprestimo+' empréstimo(s) · '+wk.senior+' sênior(es)</span></button>';
       h+=efficiencyBar('Eficiência geral',wk.score);
       e.innerHTML=h;
     }
-    var versatility=state.employees.map(function(emp){return {label:emp.name,value:(emp.postIds||[]).length};}).sort(function(a,b){return b.value-a.value || a.label.localeCompare(b.label);});
-    renderBars('chart-employee-versatility',versatility);
-    var trained=state.posts.map(function(p){ var count=state.employees.filter(function(emp){return (emp.postIds||[]).indexOf(p.id)!==-1;}).length; return {label:p.name,value:count}; }).sort(function(a,b){return b.value-a.value || a.label.localeCompare(b.label);});
-    renderBars('chart-post-trained',trained);
+    var versatility=state.employees.map(function(emp){return {id:emp.id,label:emp.name,value:(emp.postIds||[]).length};}).sort(function(a,b){return b.value-a.value || a.label.localeCompare(b.label);});
+    renderBars('chart-employee-versatility',versatility,'employee');
+    var trained=state.posts.map(function(p){ var count=state.employees.filter(function(emp){return (emp.postIds||[]).indexOf(p.id)!==-1;}).length; return {id:p.id,label:p.name,value:count,criticidade:p.criticidade}; }).sort(function(a,b){return b.value-a.value || a.label.localeCompare(b.label);});
+    renderBars('chart-post-trained',trained,'post');
     var map=scheduledNamesByPost();
     var q=((document.getElementById('dashboard-post-search')||{}).value||'').toLowerCase().trim();
     var det=document.getElementById('dashboard-post-details');
-    if(det) det.innerHTML=state.posts.filter(function(p){return !q || p.name.toLowerCase().indexOf(q)!==-1;}).map(function(p){ var ids=Object.keys(map[p.id]||{}), names=ids.map(function(id){var emp=findEmployee(id);return emp?emp.name:id;}).sort(); return '<div class="post-week-item"><strong>'+escapeHtml(p.name)+'</strong><div class="post-week-names">'+(names.length?escapeHtml(names.join(' · ')):'Nenhum operador escalado')+'</div></div>';}).join('');
+    if(det) det.innerHTML=state.posts.filter(function(p){return !q || p.name.toLowerCase().indexOf(q)!==-1;}).map(function(p){ var ids=Object.keys(map[p.id]||{}), names=ids.map(function(id){var emp=findEmployee(id);return emp?emp.name:id;}).sort(); return '<button type="button" class="post-week-item post-detail-button" data-action="dashboard-post" data-id="'+escapeHtml(p.id)+'"><strong><span class="crit-dot crit-'+p.criticidade+'" aria-hidden="true"></span> '+escapeHtml(p.name)+'</strong><div class="post-week-names">'+(names.length?escapeHtml(names.join(' · ')):'Nenhum operador escalado')+' · Toque para ver habilitados</div></button>';}).join('');
   }
 
   function switchPage(page){
@@ -3115,9 +3332,11 @@
       var value=this.value;if(!dateIsValid(value)){this.value=state.weekStart;return;}value=mondayOf(value);
       if(value===state.weekStart){this.value=value;return;}
       if(!confirm('Mudar a semana limpa o rodízio, as ausências do dia e as reposições atuais. Será baixado um backup antes. Continuar?')){this.value=state.weekStart;return;}
-      downloadBackupCompleto('antes-de-mudar-a-semana');rememberWeekHeavy();state.weekStart=value;
+      rememberWeekHeavy();rememberWeekVisits();downloadBackupCompleto('antes-de-mudar-a-semana');
+      var cycleCompleted=startNextCycleIfComplete();state.weekStart=value;
       DAYS.forEach(function(d){state.schedule[d.id]=emptyStructureFor(d.id);state.absentees[d.id]=[null,null,null,null,null,null];state.reposicoes[d.id]=[];});
       saveStateToLocalStorage();renderRodizio();renderDashboard();
+      if(cycleCompleted)showToast('Todos passaram pelos postos habilitados. Rodada '+state.cycleNumber+' iniciada!');
     });
     renderFuncPostosCheckboxes();
     renderPostoSetorOptions();
@@ -3157,6 +3376,17 @@
     document.getElementById('coverage-search').addEventListener('input', renderCoverage);
     document.getElementById('coverage-target').addEventListener('input', renderCoverage);
     document.getElementById('coverage-target-sc5').addEventListener('input', renderCoverage);
+    document.getElementById('page-dashboard').addEventListener('click',function(e){
+      var item=e.target.closest('[data-action]');if(!item)return;
+      if(item.dataset.action==='dashboard-post')openCoverageDetailsModal(item.dataset.id);
+      if(item.dataset.action==='dashboard-employee')openEmployeeCoverageModal(item.dataset.id);
+      if(item.dataset.action==='dashboard-summary')openCoverageSummaryModal(item.dataset.kind);
+      if(item.dataset.action==='dashboard-efficiency')openDashboardEfficiencyModal();
+    });
+    document.getElementById('page-dashboard').addEventListener('keydown',function(e){
+      var item=e.target.closest('tr[data-action="dashboard-post"]');
+      if(item && (e.key==='Enter' || e.key===' ')){e.preventDefault();openCoverageDetailsModal(item.dataset.id);}
+    });
     document.getElementById('btn-copiar').addEventListener('click', openSaveModal);
     document.getElementById('btn-add-reposicao').addEventListener('click', openReposicaoModal);
     document.getElementById('btn-limpar').addEventListener('click', function(){
@@ -3208,6 +3438,9 @@
           }
           if(dateIsValid(data.weekStart))state.weekStart=mondayOf(data.weekStart);
           state.heavyHistory=data.heavyHistory && typeof data.heavyHistory==='object'?data.heavyHistory:{};
+          state.visitHistory=data.visitHistory && typeof data.visitHistory==='object'?data.visitHistory:{};
+          state.cycleVisits=data.cycleVisits && typeof data.cycleVisits==='object'?data.cycleVisits:Object.assign({},state.visitHistory);
+          state.cycleNumber=Math.max(1,Math.floor(Number(data.cycleNumber)||1));
           state.schedule = data.schedule || {};
           state.absentees = data.absentees || {};
           DAYS.forEach(function(d){ if(!state.absentees[d.id]) state.absentees[d.id] = [null,null,null,null,null,null]; });
@@ -3546,6 +3779,9 @@
       var t = e.target.closest('[data-action]');
       if(!t) return;
       var action = t.dataset.action;
+      if(action==='dashboard-post'){openCoverageDetailsModal(t.dataset.id);return;}
+      if(action==='dashboard-employee'){openEmployeeCoverageModal(t.dataset.id);return;}
+      if(action==='dashboard-edit-post'){openQualifiedModal(t.dataset.id);return;}
       if(action==='save-leave'){
         var error=addEmployeeLeave(t.dataset.emp,document.getElementById('leave-start').value,document.getElementById('leave-end').value,document.getElementById('leave-reason').value);
         if(error){showToast(error);return;}closeModal();renderListaFuncionarios();renderRodizio();renderDashboard();showToast('Afastamento salvo. O operador fica fora do período informado.');return;
