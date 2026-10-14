@@ -684,6 +684,38 @@
     var set={}; (state.absentees[day]||[]).forEach(function(id){if(id)set[id]=true;});
     state.employees.forEach(function(e){if(isOnLeave(e.id,day))set[e.id]=true;}); return set;
   }
+  function hasStaffShortage(day){
+    var absent=absenceSetFor(day);
+    return Object.keys(absent).length>0 || state.employees.filter(function(e){return !absent[e.id];}).length<state.posts.length;
+  }
+  function redGreenRedEligible(emp,day){
+    if(!emp || slotCount(day)<3 || emp.restritoVerde)return false;
+    var red=0,green=0,other=0;
+    (emp.postIds||[]).forEach(function(id){
+      var post=findPost(id);
+      if(!post)return;
+      if(post.criticidade==='vermelho')red++;
+      else if(post.criticidade==='verde')green++;
+      else other++;
+    });
+    // Quem conhece mais vermelhos que verdes pode precisar de dois vermelhos
+    // distintos no dia. O posto verde fica obrigatoriamente entre eles.
+    return red>=2 && green>=1 && red>green;
+  }
+  function needsLimitedQualificationRepeat(emp,day){
+    if(!emp || (emp.postIds||[]).length>4)return false;
+    var ordinary=0,heavy=0;
+    (emp.postIds||[]).forEach(function(id){
+      var post=findPost(id);
+      if(!post || (emp.restritoVerde && post.criticidade!=='verde'))return;
+      if(post.criticidade==='vermelho')heavy++;
+      else ordinary++;
+    });
+    return ordinary+Math.min(redGreenRedEligible(emp,day)?2:1,heavy)<slotCount(day);
+  }
+  function mayRepeatPostToday(day,emp,post){
+    return !!post && post.criticidade!=='vermelho' && (hasStaffShortage(day) || needsLimitedQualificationRepeat(emp,day));
+  }
   function addEmployeeLeave(empId,start,end,reason){
     var emp=findEmployee(empId);
     if(!emp) return 'Operador não encontrado.';
@@ -1181,6 +1213,9 @@
     strategy=strategy||{};
     var n = slotCount(day);
     var absentSet = absenceSetFor(day);
+    var shortage=hasStaffShortage(day);
+    var limitedRepeat={};
+    state.employees.forEach(function(e){limitedRepeat[e.id]=needsLimitedQualificationRepeat(e,day);});
     var dayIndex=DAYS.map(function(d){return d.id;}).indexOf(day);
     var previousSchedule=dayIndex>0 ? state.schedule[DAYS[dayIndex-1].id] : null;
     var followingSchedule=dayIndex>=0 && dayIndex<DAYS.length-1 ? state.schedule[DAYS[dayIndex+1].id] : null;
@@ -1306,15 +1341,20 @@
           // No modo "Gerar rodízio mais eficiente" do Dashboard, o mesmo funcionário
           // não volta ao mesmo posto no mesmo dia e também não ultrapassa 3 vezes
           // naquele posto ao longo da semana.
-          // Evitar voltar ao mesmo posto no dia é preferência. Com equipe limitada,
-          // permitir repetição em posto leve/amarelo evita criar uma vaga falsa.
-          // A regra de um posto vermelho por dia continua obrigatória abaixo.
+          // Sem falta de pessoal, repetir o mesmo posto nos rodízios do dia
+          // fica proibido. Com ausência, é uma alternativa de última escolha.
+          if((post.criticidade==='vermelho' || (!shortage && !limitedRepeat[e.id])) && (dayPostCount[e.id+'|'+post.id]||0)>=1)return true;
           if(post.criticidade==='vermelho' && e.postIds.length>4 && adjacentByPost[post.id].indexOf(e.id)!==-1)return true;
           // A memória semanal NÃO bloqueia o funcionário de forma absoluta. Ela é
           // usada como preferência: entre soluções com a mesma eficiência diária,
           // escolhemos a que menos concentra o mesmo funcionário no mesmo posto.
           // Assim cada dia continua buscando seu melhor resultado individual.
-          if(post.criticidade==='vermelho' && (dayRed[e.id]||0)>=1) return true;
+          if(post.criticidade==='vermelho' && (dayRed[e.id]||0)>=1){
+            if((dayRed[e.id]||0)>=2 || !redGreenRedEligible(e,day) || col!==2)return true;
+            var first=state.posts.some(function(p){return p.criticidade==='vermelho' && resolveOccupant(sched[p.id][0])===e.id;});
+            var middle=state.posts.some(function(p){return p.criticidade==='verde' && resolveOccupant(sched[p.id][1])===e.id;});
+            if(!first || !middle)return true;
+          }
           return false;
         }
         function candidatesFor(post){
@@ -1425,6 +1465,7 @@
           if(!post) continue;
           if(lockedPostCol[postId+'_'+col] || lockedReposicao[postId+'_'+col]) continue;
           if(e.restritoVerde && post.criticidade!=='verde') continue;
+          if((post.criticidade==='vermelho' || (!shortage && !limitedRepeat[e.id])) && (dayPostCount[e.id+'|'+postId]||0)>=1)continue;
           if(post.criticidade==='vermelho' && (dayPostCount[e.id+'|'+postId]||0) >= 1) continue;
           if(post.criticidade==='vermelho' && e.postIds.length>4 && adjacentByPost[postId].indexOf(e.id)!==-1) continue;
           var prevOccupant = col>0 ? resolveOccupant(sched[postId][col-1]) : null;
@@ -1580,9 +1621,59 @@
   function hasHeavyAssignment(day, empId, skipPostId, skipCol, sched){
     return (heavyCounts(day,sched,skipPostId,skipCol)[empId]||0)>0;
   }
+  function redGreenRedCount(day,sched){
+    sched=sched || state.schedule[day] || {};
+    if(slotCount(day)<3)return 0;
+    return state.employees.filter(function(e){
+      if(!redGreenRedEligible(e,day))return false;
+      var first=[],last=[],greenMiddle=false;
+      state.posts.forEach(function(p){
+        var slots=sched[p.id]||[];
+        if(p.criticidade==='vermelho'){
+          if(slots[0]===e.id)first.push(p.id);
+          if(slots[2]===e.id)last.push(p.id);
+        } else if(p.criticidade==='verde' && slots[1]===e.id)greenMiddle=true;
+      });
+      return first.length===1 && last.length===1 && first[0]!==last[0] && greenMiddle;
+    }).length;
+  }
   function heavyViolations(day,sched){
+    sched=sched || state.schedule[day] || {};
     var counts=heavyCounts(day,sched);
-    return Object.keys(counts).reduce(function(sum,id){ return sum+Math.max(0,counts[id]-1); },0);
+    var validPairs={};
+    if(slotCount(day)>=3)state.employees.forEach(function(e){
+      if(!redGreenRedEligible(e,day))return;
+      var first=[],last=[],greenMiddle=false;
+      state.posts.forEach(function(p){
+        var slots=sched[p.id]||[];
+        if(p.criticidade==='vermelho'){
+          if(slots[0]===e.id)first.push(p.id);
+          if(slots[2]===e.id)last.push(p.id);
+        } else if(p.criticidade==='verde' && slots[1]===e.id)greenMiddle=true;
+      });
+      if(first.length===1 && last.length===1 && first[0]!==last[0] && greenMiddle)validPairs[e.id]=true;
+    });
+    return Object.keys(counts).reduce(function(sum,id){return sum+Math.max(0,counts[id]-(validPairs[id]?2:1));},0);
+  }
+  function canAssignRedAtSlot(day,postId,col,empId){
+    var proposed=deepClone(state.schedule[day]||emptyStructureFor(day));
+    proposed[postId][col]=empId;
+    return heavyViolations(day,proposed)===0;
+  }
+  function sameDayRepeatViolations(day,sched){
+    var repeats=0;
+    state.posts.forEach(function(p){
+      var counts={};
+      (((sched || state.schedule[day] || {})[p.id]) || []).slice(0,slotCount(day)).forEach(function(val){
+        var id=resolveOccupant(val);
+        if(typeof val==='string' && val.indexOf('REP:')===0){
+          var rep=findReposicao(day,val.slice(4));
+          if(rep)id=heavyIdentityForReplacement(rep.name);
+        }
+        if(id){counts[id]=(counts[id]||0)+1;if(counts[id]>1 && !mayRepeatPostToday(day,findEmployee(id),p))repeats++;}
+      });
+    });
+    return repeats;
   }
 
   function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
@@ -1705,9 +1796,92 @@
     return {excess:excess, concentration:concentration, cost:excess*1000 + concentration};
   }
 
+  // Quando toda a equipe está disponível e não há travas, procura uma escala
+  // completa por padrões diários de cada operador. O pareamento coluna a coluna
+  // não enxerga que Alan/Marcelo precisam reservar o verde entre dois vermelhos.
+  function solveCompleteDay(day, weeklyBase){
+    var n=slotCount(day), posts=state.posts, employees=state.employees;
+    if(posts.length!==employees.length || posts.length>30 || n>3 || n<2)return null;
+    if(Object.keys(absenceSetFor(day)).length || (state.reposicoes[day]||[]).length ||
+       (day!=='sabado' && state.formacoes.length))return null;
+    var postIndex={}, byWorker=[], byCell=[], patterns=[], cellCount=posts.length*n;
+    posts.forEach(function(p,i){postIndex[p.id]=i;});
+    for(var k=0;k<cellCount;k++)byCell.push([]);
+    var previous=state.schedule[DAYS[DAYS.map(function(d){return d.id;}).indexOf(day)-1]?.id] || {};
+    var seenPrevious={};
+    posts.forEach(function(p){(previous[p.id]||[]).forEach(function(v,c){if(v)seenPrevious[v+'|'+p.id+'|'+c]=true;});});
+    setDeterministicSeed(JSON.stringify({day:day,weekStart:state.weekStart,employees:employees.map(function(e){return [e.id,e.postIds,e.restritoVerde];}),posts:posts.map(function(p){return [p.id,p.criticidade];}),weeklyBase:weeklyBase||{}})+'|complete');
+    employees.forEach(function(e,ei){
+      var eligible=redGreenRedEligible(e,day), available=(e.postIds||[]).map(findPost).filter(function(p){
+        return p && postIndex[p.id]!==undefined && (!e.restritoVerde || p.criticidade==='verde') &&
+          (p.criticidade!=='vermelho' || e.postIds.length<=4 || adjacentPostWorkers(day,p.id).indexOf(e.id)===-1);
+      });
+      var worker=[];
+      function add(sequence){
+        var ids=sequence.map(function(p,col){return col*posts.length+postIndex[p.id];});
+        var mask=ids.reduce(function(value,id){return value | (1n<<BigInt(id));},0n);
+        var reds=sequence.filter(function(p){return p.criticidade==='vermelho';}).length;
+        var cost=reds*3+sequence.reduce(function(value,p,col){
+          return value+(weeklyBase && weeklyBase[e.id+'|'+p.id] || 0)*2+
+            (seenPrevious[e.id+'|'+p.id+'|'+col]?2:0);
+        },0)+deterministicRandom();
+        var pattern={employee:ei,sequence:sequence.slice(),ids:ids,mask:mask,cost:cost};
+        worker.push(pattern);patterns.push(pattern);
+        ids.forEach(function(id){byCell[id].push(pattern);});
+      }
+      function extend(sequence){
+        if(sequence.length===n){add(sequence);return;}
+        available.forEach(function(p){
+          if(sequence.indexOf(p)!==-1)return;
+          var col=sequence.length, redCount=sequence.filter(function(q){return q.criticidade==='vermelho';}).length;
+          if(p.criticidade==='vermelho' && redCount){
+            if(!(eligible && n===3 && col===2 && sequence[0].criticidade==='vermelho' && sequence[1].criticidade==='verde'))return;
+          }
+          if(col===1 && p.criticidade==='vermelho' && redCount)return;
+          sequence.push(p);extend(sequence);sequence.pop();
+        });
+      }
+      extend([]);
+      worker.sort(function(a,b){return a.cost-b.cost;});
+      byWorker.push(worker);
+    });
+    if(byWorker.some(function(group){return !group.length;}))return null;
+    var covered=0n, used=0n, solution=[], nodes=0, full=(1n<<BigInt(cellCount))-1n;
+    function search(){
+      if(covered===full)return true;
+      if(++nodes>50000)return false;
+      var choices=null;
+      for(var ei=0;ei<employees.length;ei++){
+        if(used&(1n<<BigInt(ei)))continue;
+        var options=byWorker[ei].filter(function(p){return !(covered&p.mask);});
+        if(!options.length)return false;
+        if(!choices || options.length<choices.length){choices=options;if(options.length===1)break;}
+      }
+      for(var id=0;id<cellCount;id++){
+        if(covered&(1n<<BigInt(id)))continue;
+        var supported=byCell[id].some(function(p){return !(used&(1n<<BigInt(p.employee))) && !(covered&p.mask);});
+        if(!supported)return false;
+      }
+      for(var i=0;i<choices.length;i++){
+        var choice=choices[i],bit=1n<<BigInt(choice.employee);
+        used|=bit;covered|=choice.mask;solution.push(choice);
+        if(search())return true;
+        solution.pop();covered^=choice.mask;used^=bit;
+      }
+      return false;
+    }
+    if(!search())return null;
+    var sched=emptyStructureFor(day);
+    solution.forEach(function(choice){choice.sequence.forEach(function(p,col){sched[p.id][col]=employees[choice.employee].id;});});
+    if(heavyViolations(day,sched) || heavyRestViolations(day,sched) || sameDayRepeatViolations(day,sched))return null;
+    return sched;
+  }
+
   function generateForDay(day, trials, options){
     trials = trials || 180;
     options = options || {};
+    var complete=solveCompleteDay(day,options.weeklyPairBase || null);
+    if(complete){state.schedule[day]=complete;saveStateToLocalStorage();return [];}
     var original=deepClone(state.schedule[day] || emptyStructureFor(day));
     var best=null, bestCoverage=-Infinity, bestDayScore=-Infinity, bestWeekCost=Infinity, bestSwitches=-1, bestStartChanged=-1, bestExceptionRepeats=Infinity, bestStuck=Infinity, bestLeft=[];
     var weeklyBase=options.weeklyPairBase || null;
@@ -2022,7 +2196,9 @@
     var sc5=state.posts.filter(function(p){var s=findSetor(p.setorId);return s && String(s.name).toUpperCase()==='SC5';}).length;
     var label=dayLabel(currentDay);
     var details=[];
-    if(m.heavyViolations) details.push(m.heavyViolations+' repetição(ões) de posto pesado — corrija antes de usar');
+    if(m.heavyViolations) details.push(m.heavyViolations+' conflito(s) na alternância de postos vermelhos — corrija antes de usar');
+    var alternatingRed=redGreenRedCount(currentDay);
+    if(alternatingRed)details.push(alternatingRed+' exceção(ões) vermelho → verde → vermelho');
     if(m.heavyRestViolations) details.push(m.heavyRestViolations+' repetição(ões) do mesmo posto vermelho em dias seguidos — corrija antes de usar');
     var noviceRepeats=noviceRedRepeats(currentDay);
     if(noviceRepeats) details.push(noviceRepeats+' exceção(ões): operador com até 4 postos repetiu posto vermelho');
@@ -2030,7 +2206,8 @@
     if(m.absent>m.seniorPending) details.push((m.absent-m.seniorPending)+' vaga(s) sem cobertura');
     if(m.emprestimo) details.push(m.emprestimo+' empréstimo(s)');
     if(m.senior) details.push(m.senior+' sênior(es)');
-    if(m.repeatedAssignments) details.push(m.repeatedAssignments+' repetição(ões) de posto');
+    if(sameDayRepeatViolations(currentDay))details.push(sameDayRepeatViolations(currentDay)+' repetição(ões) fora das exceções — corrija antes de usar');
+    else if(m.repeatedAssignments) details.push(m.repeatedAssignments+' repetição(ões) justificadas por ausência ou poucos postos leves');
     el.innerHTML='<div class="efficiency-card" style="margin:4px 0 18px">'+
       '<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:4px">'+
         '<div><div class="hint-small" style="margin:0">Eficiência do rodízio — '+escapeHtml(label)+'</div><div style="font:800 2rem var(--font-display);color:#0d3b66">'+Math.round(m.score)+'%</div></div>'+
@@ -2455,8 +2632,7 @@
       if(occ) usedThisCol[occ] = true;
     });
     var currentVal = sched[postId][col];
-    var prevOccupant = col>0 ? resolveOccupant(sched[postId][col-1]) : null;
-    var nextOccupant = col<n-1 ? resolveOccupant(sched[postId][col+1]) : null;
+    var samePostWorkers=(sched[postId]||[]).map(function(val,c){return c===col?null:resolveOccupant(val);});
     var qualified = state.employees.filter(function(e){ return e.postIds.indexOf(postId)!==-1; });
 
     var rows = qualified.map(function(e){
@@ -2464,13 +2640,15 @@
       if(e.id===currentVal){ status = 'Atual neste posto'; }
       else if(absentSet[e.id]){ status = isOnLeave(e.id,day)?'Afastado neste dia':'Ausente neste dia'; blocked = true; }
       else if(e.restritoVerde && post.criticidade!=='verde'){ status = 'Restrito a postos verdes'; blocked = true; }
-      else if(post.criticidade==='vermelho' && hasHeavyAssignment(day,e.id,postId,col)){ status = 'Já fez posto pesado neste dia'; blocked = true; }
+      else if(post.criticidade==='vermelho' && !canAssignRedAtSlot(day,postId,col,e.id)){ status = 'Segundo vermelho: só no 3º, com verde no 2º'; blocked = true; }
+      else if(samePostWorkers.indexOf(e.id)!==-1 && !mayRepeatPostToday(day,e,post)){status='Já fez este posto hoje';blocked=true;}
+      else if(usedThisCol[e.id]){ status = 'Em outro posto neste rodízio'; blocked = true; }
       else if(post.criticidade==='vermelho' && adjacentPostWorkers(day,postId).indexOf(e.id)!==-1){
         if(e.postIds.length<=4)status='Exceção: até 4 postos habilitados';
         else {status='Fez este posto vermelho no dia anterior ou seguinte';blocked=true;}
       }
-      else if(usedThisCol[e.id]){ status = 'Em outro posto neste rodízio'; blocked = true; }
-      else if(e.id===prevOccupant || e.id===nextOccupant){ status = 'Mesmo posto em rodízio adjacente'; blocked = true; }
+      else if(post.criticidade==='vermelho' && hasHeavyAssignment(day,e.id,postId,col)){status='Exceção: vermelho → verde → vermelho';}
+      else if(samePostWorkers.indexOf(e.id)!==-1){status=hasStaffShortage(day)?'Exceção por falta de pessoal':'Exceção: poucas opções fora dos vermelhos';}
       var btn = blocked ? '' : '<button data-action="pick-assign" data-day="'+day+'" data-post="'+postId+'" data-col="'+col+'" data-emp="'+e.id+'">Selecionar</button>';
       return '<div class="modal-row assign-row"><span>'+escapeHtml(e.name)+'</span><span class="status '+(blocked?'blocked':'ok')+'">'+status+'</span>'+btn+'</div>';
     }).join('') || '<p class="modal-hint">Nenhum funcionário cadastrado para este posto ainda.</p>';
@@ -2684,7 +2862,7 @@
 
   function exportRodizioImage(){
     sanitizeLeaveAssignments();
-    if(heavyViolations(currentDay) || heavyRestViolations(currentDay)){ showToast('Corrija posto vermelho repetido em dias seguidos ou mais de um vermelho no dia antes de exportar.'); return; }
+    if(heavyViolations(currentDay) || heavyRestViolations(currentDay) || sameDayRepeatViolations(currentDay)){ showToast('Corrija repetição fora das exceções ou conflito em posto vermelho antes de exportar.'); return; }
     var canvas = buildRodizioImage();
     if(!canvas) return;
     canvas.toBlob(function(blob){
@@ -3396,7 +3574,13 @@
       if(action==='pick-assign'){
         if(absenceSetFor(t.dataset.day)[t.dataset.emp]){showToast('Operador ausente ou afastado neste dia.');return;}
         var selectedPost=findPost(t.dataset.post);
-        if(selectedPost && selectedPost.criticidade==='vermelho' && hasHeavyAssignment(t.dataset.day,t.dataset.emp,t.dataset.post,parseInt(t.dataset.col,10))){ showToast('Este operador já tem um posto pesado neste dia.'); return; }
+        var chosenDay=t.dataset.day,chosenCol=parseInt(t.dataset.col,10);
+        var chosenEmployee=findEmployee(t.dataset.emp);
+        if(!chosenEmployee || !selectedPost || chosenEmployee.postIds.indexOf(selectedPost.id)===-1){showToast('Operador não habilitado para este posto.');return;}
+        if(chosenEmployee.restritoVerde && selectedPost.criticidade!=='verde'){showToast('Operador restrito a postos verdes.');return;}
+        if(state.posts.some(function(p){return p.id!==selectedPost.id && resolveOccupant((state.schedule[chosenDay][p.id]||[])[chosenCol])===chosenEmployee.id;})){showToast('Operador já está em outro posto neste rodízio.');return;}
+        if(!mayRepeatPostToday(chosenDay,chosenEmployee,selectedPost) && (state.schedule[chosenDay][t.dataset.post]||[]).some(function(val,c){return c!==chosenCol && resolveOccupant(val)===t.dataset.emp;})){showToast('Este operador já fez este posto hoje.');return;}
+        if(selectedPost && selectedPost.criticidade==='vermelho' && !canAssignRedAtSlot(chosenDay,selectedPost.id,chosenCol,chosenEmployee.id)){ showToast('Segundo vermelho só no 3º rodízio, com verde no 2º e outro vermelho no 1º.'); return; }
         var chosen=findEmployee(t.dataset.emp);
         if(selectedPost && selectedPost.criticidade==='vermelho' && chosen && chosen.postIds.length>4 && adjacentPostWorkers(t.dataset.day,t.dataset.post).indexOf(t.dataset.emp)!==-1){showToast('Esse operador fez este posto vermelho no dia anterior ou seguinte.');return;}
         state.schedule[t.dataset.day][t.dataset.post][parseInt(t.dataset.col,10)] = t.dataset.emp;
@@ -3444,7 +3628,7 @@
       } else if(action==='pick-save-day'){
         var day = t.dataset.day;
         var copied=JSON.parse(JSON.stringify(state.schedule[currentDay]));
-        if(heavyViolations(day,copied) || heavyRestViolations(day,copied)){showToast('Cópia bloqueada: posto vermelho repetido em dias seguidos ou mais de um vermelho no dia.');return;}
+        if(heavyViolations(day,copied) || heavyRestViolations(day,copied) || sameDayRepeatViolations(day,copied)){showToast('Cópia bloqueada: repetição fora das exceções ou conflito em posto vermelho.');return;}
         state.schedule[day] = copied;
         saveStateToLocalStorage();
         closeModal();
