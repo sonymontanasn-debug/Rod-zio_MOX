@@ -494,7 +494,7 @@
         </button>
         <div class="setor-selector hidden" id="formacao-suggestion-content"></div>
       </div>
-      <p class="hint-small" style="margin-top:0;">Analisa cobertura mínima de 6 operadores por posto, mínimo de 3 postos por funcionário e diversificação entre postos verdes, amarelos e vermelhos.</p>
+      <p class="hint-small" style="margin-top:0;">Rota sugerida: operadores com menos postos → postos com menos habilitados. Primeiro SC5, depois MOX, e KIT por último. Metas de planejamento: 8 no SC5 e 6 no MOX; confirme com a liderança quem pode treinar em cada posto.</p>
     </div>
     <section class="card stacked-card">
       <h2>Registrar Formação</h2>
@@ -1194,6 +1194,43 @@
   function findSetor(id){ return state.setores.filter(function(s){return s.id===id;})[0]; }
   function findFormacao(id){ return state.formacoes.filter(function(f){return f.id===id;})[0]; }
   function findReposicao(day,id){ return (state.reposicoes[day]||[]).filter(function(r){return r.id===id;})[0]; }
+  // Há dois Sêniores na linha; um precisa permanecer disponível em cada rodízio.
+  function seniorCoverageCount(day,col){
+    return (state.reposicoes[day]||[]).filter(function(r){return r.type==='SENIOR' && !!(r.postIds||[])[col];}).length;
+  }
+  function seniorCapacityConflict(day){
+    for(var col=0;col<slotCount(day);col++)if(seniorCoverageCount(day,col)>1)return 'dois Sêniores em postos no '+(col+1)+'º rodízio de '+dayLabel(day);
+    var invalid=(state.reposicoes[day]||[]).filter(function(r){return r.type==='SENIOR' &&
+      (r.postIds||[]).some(function(pid){return pid && !seniorCanCover(seniorSectorFor(r),findPost(pid));});})[0];
+    if(invalid)return escapeHtml(invalid.name)+' em posto não permitido para Sênior '+seniorSectorFor(invalid)+' na '+dayLabel(day);
+    return '';
+  }
+  function seniorSectorFor(r){
+    if(r.seniorSector)return r.seniorSector;
+    var first=(r.postIds||[]).map(findPost).filter(Boolean)[0];
+    var setor=first && findSetor(first.setorId);
+    return setor?String(setor.name).trim().toUpperCase():'';
+  }
+  function seniorCanCover(sector,post){
+    if(!post || !sector)return false;
+    var setor=findSetor(post.setorId);
+    if(!setor || String(setor.name).trim().toUpperCase()!==sector)return false;
+    if(sector==='SC5' && post.name==='7E')return false;
+    if(sector==='MOX' && (post.name==='01A' || post.name==='12D'))return false;
+    return sector==='MOX' || sector==='SC5';
+  }
+  function scarcePostAlerts(day){
+    var absent=absenceSetFor(day),n=slotCount(day);
+    return state.posts.map(function(p){
+      var available=state.employees.filter(function(e){return !absent[e.id] && (e.postIds||[]).indexOf(p.id)!==-1 &&
+        (!e.restritoVerde || p.criticidade==='verde');});
+      var covered=(state.reposicoes[day]||[]).reduce(function(total,r){
+        return total+(r.postIds||[]).slice(0,n).filter(function(pid){return pid===p.id;}).length;
+      },0);
+      return {post:p,available:available,open:n-covered};
+    }).filter(function(item){return item.available.length<=item.open && item.open>0;})
+      .sort(function(a,b){return a.available.length-a.open-(b.available.length-b.open);});
+  }
   function critLabel(c){ return c==='amarelo' ? 'Amarelo' : c==='vermelho' ? 'Vermelho' : 'Verde'; }
   function critColor(c){ return c==='amarelo' ? '#ffcc33' : c==='vermelho' ? '#ff5c5c' : '#3ddc84'; }
   function escapeHtml(s){
@@ -1261,6 +1298,10 @@
     (state.reposicoes[day]||[]).forEach(function(r){
       (r.postIds||[]).forEach(function(pid, col){
         if(pid && col<n) lockedReposicao[pid+'_'+col] = r;
+        var trainee=(r.traineeIds||[])[col];
+        if(pid && trainee && col<n){
+          colExcluded[col][trainee]=true;
+        }
       });
     });
     activeFormacoes.forEach(function(f){
@@ -1270,6 +1311,9 @@
     });
 
     var dayAppearance = {};
+    (state.reposicoes[day]||[]).forEach(function(r){(r.traineeIds||[]).slice(0,n).forEach(function(id){
+      if(id)dayAppearance[id]=(dayAppearance[id]||0)+1;
+    });});
     var previousStart=firstSectorForPreviousDay(day);
     var dayRed = {};
     var dayPostCount = {};
@@ -1280,6 +1324,13 @@
     if(weeklyPairBase){ Object.keys(weeklyPairBase).forEach(function(k){ weeklyPairCount[k]=weeklyPairBase[k]; }); }
     var redInCol = [];
     for(var i2=0;i2<n;i2++) redInCol.push({});
+    (state.reposicoes[day]||[]).forEach(function(r){(r.postIds||[]).slice(0,n).forEach(function(pid,col){
+      var trainee=(r.traineeIds||[])[col],post=findPost(pid);
+      if(trainee && post && post.criticidade==='vermelho'){
+        dayRed[trainee]=(dayRed[trainee]||0)+1;
+        redInCol[col][trainee]=true;
+      }
+    });});
 
     activeFormacoes.forEach(function(f){
       var post = findPost(f.postId);
@@ -1297,6 +1348,44 @@
         redInCol[f.col][f.traineeId] = true;
         redInCol[f.col][f.trainerId] = true;
       }
+    });
+
+    // Um posto com poucos habilitados disponíveis precisa ser coberto antes de
+    // consumir essas pessoas nos demais postos. Uma reposição nomeada cobre
+    // somente a coluna indicada; as outras continuam precisando de operador.
+    var scarcePosts=state.posts.map(function(post){
+      var open=[];
+      for(var c=0;c<n;c++)if(!lockedPostCol[post.id+'_'+c] && !lockedReposicao[post.id+'_'+c])open.push(c);
+      var qualified=state.employees.filter(function(e){return !absentSet[e.id] && e.postIds.indexOf(post.id)!==-1 &&
+        (!e.restritoVerde || post.criticidade==='verde') &&
+        (post.criticidade!=='vermelho' || e.postIds.length<=4 || adjacentByPost[post.id].indexOf(e.id)===-1);});
+      return {post:post,open:open,qualified:qualified};
+    }).filter(function(item){return item.post.criticidade!=='vermelho' && item.open.length &&
+      item.qualified.length===item.open.length;})
+      .sort(function(a,b){return a.qualified.length-a.open.length-(b.qualified.length-b.open.length);});
+    scarcePosts.forEach(function(item){
+      var usedHere={};
+      item.open.forEach(function(col){
+        var candidates=item.qualified.filter(function(e){return !colExcluded[col][e.id] && !usedHere[e.id] &&
+          (!dayPostCount[e.id+'|'+item.post.id] || mayRepeatPostToday(day,e,item.post));});
+        if(!candidates.length)candidates=item.qualified.filter(function(e){return !colExcluded[col][e.id] &&
+          mayRepeatPostToday(day,e,item.post);});
+        candidates.sort(function(a,b){
+          var aa=(a.postIds||[]).length,bb=(b.postIds||[]).length;
+          if(aa!==bb)return aa-bb;
+          var ap=dayPostCount[a.id+'|'+item.post.id]||0,bp=dayPostCount[b.id+'|'+item.post.id]||0;
+          if(ap!==bp)return ap-bp;
+          var ac=+(previousSchedule && resolveOccupant((previousSchedule[item.post.id]||[])[col])===a.id);
+          var bc=+(previousSchedule && resolveOccupant((previousSchedule[item.post.id]||[])[col])===b.id);
+          return ac-bc || deterministicRandom()-0.5;
+        });
+        var e=candidates[0];
+        if(!e)return;
+        sched[item.post.id][col]=e.id;usedHere[e.id]=true;colExcluded[col][e.id]=true;
+        dayAppearance[e.id]=(dayAppearance[e.id]||0)+1;
+        dayPostCount[e.id+'|'+item.post.id]=(dayPostCount[e.id+'|'+item.post.id]||0)+1;
+        weeklyPairCount[e.id+'|'+item.post.id]=(weeklyPairCount[e.id+'|'+item.post.id]||0)+1;
+      });
     });
 
     // Reserve primeiro os postos vermelhos dos três rodízios. Se cada coluna
@@ -1357,7 +1446,7 @@
     var columnOrder=columnOrders[(strategy.columnOrder||0)%columnOrders.length];
     for(var orderIndex=0; orderIndex<n; orderIndex++){
       var col=columnOrder[orderIndex];
-      var postsToFill = state.posts.filter(function(p){ return !lockedPostCol[p.id+'_'+col] && !lockedReposicao[p.id+'_'+col] && !reservedRed[p.id+'_'+col]; });
+      var postsToFill = state.posts.filter(function(p){ return !sched[p.id][col] && !lockedPostCol[p.id+'_'+col] && !lockedReposicao[p.id+'_'+col] && !reservedRed[p.id+'_'+col]; });
 
       (function(col, postsToFill){
         function isBlocked(e, post){
@@ -1541,7 +1630,7 @@
           if(f) ids=[f.traineeId,f.trainerId];
         } else if(typeof val==='string' && val.indexOf('REP:')===0){
           var r=findReposicao(day,val.slice(4));
-          if(r) ids=[heavyIdentityForReplacement(r.name)];
+          if(r) ids=[heavyIdentityForReplacement(r.name),(r.traineeIds||[])[col]].filter(Boolean);
         } else { var id=resolveOccupant(val); if(id) ids=[id]; }
         ids.filter(function(id,i){ return id && ids.indexOf(id)===i; }).forEach(function(id){ counts[id]=(counts[id]||0)+1; });
       });
@@ -1551,11 +1640,11 @@
   function heavyWorkersForPost(day,postId,sched){
     var post=findPost(postId), workers=[];
     if(!post || post.criticidade!=='vermelho')return workers;
-    ((sched || state.schedule[day] || {})[postId] || []).slice(0,slotCount(day)).forEach(function(val){
+    ((sched || state.schedule[day] || {})[postId] || []).slice(0,slotCount(day)).forEach(function(val,col){
       if(typeof val==='string' && val.indexOf('FORM:')===0){
         var f=findFormacao(val.slice(5));if(f)workers.push(f.traineeId,f.trainerId);
       } else if(typeof val==='string' && val.indexOf('REP:')===0){
-        var r=findReposicao(day,val.slice(4));if(r)workers.push(heavyIdentityForReplacement(r.name));
+        var r=findReposicao(day,val.slice(4));if(r){workers.push(heavyIdentityForReplacement(r.name));if((r.traineeIds||[])[col])workers.push(r.traineeIds[col]);}
       } else {var id=resolveOccupant(val);if(id)workers.push(id);}
     });
     return workers.filter(function(id,i){return id && workers.indexOf(id)===i;});
@@ -1575,11 +1664,11 @@
     var neighbors=[DAYS[index-1],DAYS[index+1]], ids=[];
     neighbors.forEach(function(d){
       if(!d || !state.schedule[d.id])return;
-      (state.schedule[d.id][postId]||[]).forEach(function(val){
+      (state.schedule[d.id][postId]||[]).forEach(function(val,col){
         if(typeof val==='string' && val.indexOf('FORM:')===0){
           var f=findFormacao(val.slice(5));if(f)ids.push(f.traineeId,f.trainerId);
         } else if(typeof val==='string' && val.indexOf('REP:')===0){
-          var r=findReposicao(d.id,val.slice(4));if(r)ids.push(heavyIdentityForReplacement(r.name));
+          var r=findReposicao(d.id,val.slice(4));if(r){ids.push(heavyIdentityForReplacement(r.name));if((r.traineeIds||[])[col])ids.push(r.traineeIds[col]);}
         } else {var id=resolveOccupant(val);if(id)ids.push(id);}
       });
     });
@@ -1956,10 +2045,116 @@
     return sched;
   }
 
+  // Com ausência e reposição nomeada, reserve as vagas já cobertas e procure
+  // primeiro os postos com menos combinações possíveis. Assim a pessoa que
+  // conhece um posto raro não é gasta em outro antes de fechá-lo.
+  function solveScarceFirstDay(day, weeklyBase){
+    var n=slotCount(day), posts=state.posts, absent=absenceSetFor(day);
+    var employees=state.employees.filter(function(e){return !absent[e.id];});
+    var replacements=state.reposicoes[day]||[];
+    if(posts.length>30 || employees.length>30 || n<2 || n>3 ||
+       (day!=='sabado' && state.formacoes.length) || !replacements.length ||
+       replacements.some(function(r){return (r.traineeIds||[]).some(Boolean);}))return null;
+    var locked={}, lockedByCol=Array(n).fill(0), postIndex={};
+    posts.forEach(function(p,i){postIndex[p.id]=i;});
+    replacements.forEach(function(r){
+      (r.postIds||[]).forEach(function(pid,col){
+        if(pid && col<n && postIndex[pid]!==undefined){
+          var key=pid+'|'+col;
+          if(!locked[key])lockedByCol[col]++;
+          locked[key]=r.id;
+        }
+      });
+    });
+    var idleByCol=lockedByCol.map(function(count){return employees.length-posts.length+count;});
+    if(idleByCol.some(function(count){return count<0 || count>2;}) ||
+       idleByCol.reduce(function(a,b){return a+b;},0)>2)return null;
+    var baseCells=posts.length*n, cellCount=baseCells+idleByCol.reduce(function(a,b){return a+b;},0);
+    var byCell=Array.from({length:cellCount},function(){return [];});
+    var idleCells=idleByCol.map(function(count){
+      var cells=[];for(var i=0;i<count;i++)cells.push(baseCells++);return cells;
+    });
+    var lockedMask=0n;
+    Object.keys(locked).forEach(function(key){var parts=key.split('|');lockedMask|=1n<<BigInt(Number(parts[1])*posts.length+postIndex[parts[0]]);});
+    var previous=state.schedule[DAYS[DAYS.map(function(d){return d.id;}).indexOf(day)-1]?.id]||{};
+    setDeterministicSeed(JSON.stringify({day:day,weekStart:state.weekStart,active:employees.map(function(e){return [e.id,e.postIds];}),locked:locked,weeklyBase:weeklyBase||{}})+'|scarce');
+    employees.forEach(function(e,ei){
+      var eligible=redGreenRedEligible(e,day);
+      var available=(e.postIds||[]).map(findPost).filter(function(p){return p && postIndex[p.id]!==undefined &&
+        (!e.restritoVerde || p.criticidade==='verde') &&
+        (p.criticidade!=='vermelho' || e.postIds.length<=4 || adjacentPostWorkers(day,p.id).indexOf(e.id)===-1);});
+      function add(seq,ids){
+        var mask=ids.reduce(function(a,id){return a|(1n<<BigInt(id));},0n);
+        var reds=seq.filter(function(p){return p && p.criticidade==='vermelho';}).length;
+        var cost=reds*3+seq.reduce(function(a,p,col){
+          if(!p)return a+2;
+          var repeats=seq.slice(0,col).filter(function(q){return q===p;}).length;
+          return a+repeats*25+(weeklyBase && weeklyBase[e.id+'|'+p.id]||0)*2+
+            visitRecencyPenalty(e.id,p.id)+(previous[p.id] && previous[p.id][col]===e.id?2:0);
+        },0)+deterministicRandom();
+        var pattern={employee:ei,sequence:seq.slice(),mask:mask,cost:cost};
+        ids.forEach(function(id){byCell[id].push(pattern);});
+      }
+      function extend(seq,ids){
+        var col=seq.length;
+        if(col===n){add(seq,ids);return;}
+        available.forEach(function(p){
+          if(locked[p.id+'|'+col])return;
+          var repeated=seq.indexOf(p)!==-1;
+          if(repeated && !mayRepeatPostToday(day,e,p))return;
+          var priorRed=seq.filter(function(q){return q && q.criticidade==='vermelho';}).length;
+          if(p.criticidade==='vermelho' && priorRed &&
+             !(eligible && n===3 && col===2 && seq[0] && seq[0].criticidade==='vermelho' && seq[1] && seq[1].criticidade==='verde'))return;
+          seq.push(p);ids.push(col*posts.length+postIndex[p.id]);extend(seq,ids);ids.pop();seq.pop();
+        });
+        idleCells[col].forEach(function(id){seq.push(null);ids.push(id);extend(seq,ids);ids.pop();seq.pop();});
+      }
+      extend([],[]);
+    });
+    if(byCell.some(function(groups,id){return !(lockedMask&(1n<<BigInt(id))) && !groups.length;}))return null;
+    byCell.forEach(function(groups){groups.sort(function(a,b){return a.cost-b.cost;});});
+    var full=(1n<<BigInt(cellCount))-1n, used=0n, covered=lockedMask, solution=[],nodes=0;
+    function search(){
+      if(covered===full)return true;
+      if(++nodes>1000)return false;
+      var chosen=-1,min=Infinity,fewestWorkers=Infinity;
+      for(var id=0;id<cellCount;id++){
+        if(covered&(1n<<BigInt(id)))continue;
+        var count=0,groups=byCell[id],distinct={},workerCount=0;
+        for(var j=0;j<groups.length;j++){
+          var p=groups[j];
+          if(!(used&(1n<<BigInt(p.employee))) && !(covered&p.mask)){
+            count++;
+            if(!distinct[p.employee]){distinct[p.employee]=true;workerCount++;}
+          }
+        }
+        if(!count)return false;
+        if(workerCount<fewestWorkers || (workerCount===fewestWorkers && count<min)){
+          min=count;fewestWorkers=workerCount;chosen=id;
+        }
+      }
+      var choices=byCell[chosen];
+      for(var k=0;k<choices.length;k++){
+        var choice=choices[k],bit=1n<<BigInt(choice.employee);
+        if((used&bit)||(covered&choice.mask))continue;
+        used|=bit;covered|=choice.mask;solution.push(choice);
+        if(search())return true;
+        solution.pop();covered^=choice.mask;used^=bit;
+      }
+      return false;
+    }
+    if(!search())return null;
+    var sched=emptyStructureFor(day);
+    Object.keys(locked).forEach(function(key){var parts=key.split('|');sched[parts[0]][Number(parts[1])]='REP:'+locked[key];});
+    solution.forEach(function(pattern){pattern.sequence.forEach(function(p,col){if(p)sched[p.id][col]=employees[pattern.employee].id;});});
+    if(heavyViolations(day,sched)||heavyRestViolations(day,sched)||sameDayRepeatViolations(day,sched))return null;
+    return sched;
+  }
+
   function generateForDay(day, trials, options){
     trials = trials || 180;
     options = options || {};
-    var complete=solveCompleteDay(day,options.weeklyPairBase || null);
+    var complete=solveCompleteDay(day,options.weeklyPairBase || null) || solveScarceFirstDay(day,options.weeklyPairBase || null);
     if(complete){state.schedule[day]=complete;saveStateToLocalStorage();return [];}
     var original=deepClone(state.schedule[day] || emptyStructureFor(day));
     var best=null, bestCoverage=-Infinity, bestDayScore=-Infinity, bestWeekCost=Infinity, bestSwitches=-1, bestStartChanged=-1, bestExceptionRepeats=Infinity, bestStuck=Infinity, bestLeft=[];
@@ -2299,7 +2494,11 @@
         else if(val==='AUSENTE'){ cls+=' ausente'; text='Ausente'; }
         else if(typeof val==='string' && val.indexOf('REP:')===0){
           var rep = findReposicao(day, val.slice(4));
-          if(rep){ cls += ' reposicao '+(rep.type==='EMPRESTIMO'?'emprestimo':'senior'); text = '🔒 '+escapeHtml(rep.name); }
+          if(rep){
+            cls += ' reposicao '+(rep.type==='EMPRESTIMO'?'emprestimo':'senior');
+            var learner=findEmployee((rep.traineeIds||[])[c]);
+            text = '🔒 '+escapeHtml(rep.name)+(learner?' / '+escapeHtml(learner.name)+' em formação':'');
+          }
           else { cls+=' ausente'; text='Ausente'; }
         }
         else if(typeof val==='string' && val.indexOf('FORM:')===0){
@@ -2396,10 +2595,19 @@
     var container = document.getElementById('reposicoes-list');
     if(!container) return;
     var list = state.reposicoes[currentDay] || [];
-    if(!list.length){ container.innerHTML = '<p class="empty-msg">Nenhuma reposição cadastrada para '+dayLabel(currentDay)+'.</p>'; return; }
-    container.innerHTML = list.map(function(r){
-      var turnos = (r.postIds||[]).map(function(pid,i){ var p=pid?findPost(pid):null; return p ? (i+1)+'º rodízio: '+escapeHtml(p.name) : null; }).filter(Boolean).join(' · ');
-      return '<div class="reposicao-item"><div class="reposicao-meta"><span class="reposicao-badge '+(r.type==='EMPRESTIMO'?'emprestimo':'senior')+'">'+(r.type==='EMPRESTIMO'?'Empréstimo':'Sênior')+'</span><strong>'+escapeHtml(r.name)+'</strong><span class="hint-small" style="margin:0;">'+turnos+'</span></div><button data-action="remove-reposicao" data-id="'+r.id+'">Excluir</button></div>';
+    var availability='<p class="hint-small">Dois Sêniores no total (MOX e SC5). Em cada rodízio, no máximo um cobre posto; o outro permanece livre para testes, retoques e apoio: '+
+      Array.from({length:slotCount(currentDay)},function(_,col){return (col+1)+'º: '+Math.max(0,2-seniorCoverageCount(currentDay,col))+' livre(s)';}).join(' · ')+'</p>';
+    var scarce=scarcePostAlerts(currentDay);
+    var alert=scarce.length?'<p class="hint-small"><strong>Prioridade de formação hoje:</strong> '+scarce.map(function(item){
+      return escapeHtml(item.post.name)+' ('+item.available.length+' habilitado(s) disponível(is) para '+item.open+' período(s): '+
+        (item.available.length?item.available.map(function(e){return escapeHtml(e.name);}).join(', '):'nenhum')+')';
+    }).join(' · ')+'</p>':'';
+    if(!list.length){ container.innerHTML = availability+alert+'<p class="empty-msg">Nenhuma reposição cadastrada para '+dayLabel(currentDay)+'.</p>'; return; }
+    container.innerHTML = availability+alert+list.map(function(r){
+      var turnos = (r.postIds||[]).map(function(pid,i){ var p=pid?findPost(pid):null,learner=findEmployee((r.traineeIds||[])[i]);
+        return p ? (i+1)+'º rodízio: '+escapeHtml(p.name)+(learner?' com '+escapeHtml(learner.name)+' em formação':'') : null;
+      }).filter(Boolean).join(' · ');
+      return '<div class="reposicao-item"><div class="reposicao-meta"><span class="reposicao-badge '+(r.type==='EMPRESTIMO'?'emprestimo':'senior')+'">'+(r.type==='EMPRESTIMO'?'Empréstimo':'Sênior '+escapeHtml(seniorSectorFor(r)))+'</span><strong>'+escapeHtml(r.name)+'</strong><span class="hint-small" style="margin:0;">'+turnos+'</span></div><button data-action="remove-reposicao" data-id="'+r.id+'">Excluir</button></div>';
     }).join('');
   }
 
@@ -2407,18 +2615,26 @@
     var n = slotCount(currentDay);
     function opts(){ return '<option value="">Não repor neste rodízio</option>'+state.posts.map(function(p){ var setor=findSetor(p.setorId); return '<option value="'+p.id+'">'+escapeHtml(p.name)+(setor?' · '+escapeHtml(setor.name):'')+'</option>'; }).join(''); }
     var turnos = '';
+    var traineeOptions='<option value="">Sem aprendiz</option>'+state.employees.map(function(e){return '<option value="'+e.id+'">'+escapeHtml(e.name)+'</option>';}).join('');
     for(var c=0;c<3;c++){
       if(c>=n) turnos += '<label>'+(c+1)+'º rodízio<select disabled><option>Não utilizado neste dia</option></select></label>';
-      else turnos += '<label>'+(c+1)+'º rodízio<select id="rep-post-'+c+'">'+opts()+'</select></label>';
+      else turnos += '<label>'+(c+1)+'º rodízio<select id="rep-post-'+c+'">'+opts()+'</select></label><label>Aprendiz junto ao Sênior (opcional)<select id="rep-trainee-'+c+'">'+traineeOptions+'</select></label>';
     }
-    showModal('<span class="modal-close" data-action="close">✕</span><h3>Repor Ausência</h3><p class="modal-hint">Informe quem fará a reposição. O nome ficará travado nos postos selecionados mesmo após gerar o rodízio automático.</p><div class="reposicao-grid"><label>Tipo<select id="rep-type"><option value="SENIOR">Sênior</option><option value="EMPRESTIMO">Empréstimo</option></select></label><label>Nome<input id="rep-name" type="text" placeholder="Nome da pessoa"></label></div><div class="reposicao-turnos">'+turnos+'</div><div class="modal-footer-actions"><button class="btn" data-action="save-reposicao">Salvar reposição</button></div>');
+    showModal('<span class="modal-close" data-action="close">✕</span><h3>Repor Ausência</h3><p class="modal-hint">A mesma pessoa pode cobrir postos diferentes nos rodízios. Sênior MOX: todos os postos MOX menos 01A e 12D. Sênior SC5: todos os postos SC5 menos 7E. Selecione apenas postos permitidos. Em cada período, pelo menos um dos dois fica fora da linha para testes, retoques e apoio.</p><div class="reposicao-grid"><label>Tipo<select id="rep-type"><option value="SENIOR">Sênior</option><option value="EMPRESTIMO">Empréstimo</option></select></label><label>Setor do Sênior<select id="rep-sector"><option value="MOX">MOX</option><option value="SC5">SC5</option></select></label><label>Nome<input id="rep-name" type="text" placeholder="Nome da pessoa"></label></div><div class="reposicao-turnos">'+turnos+'</div><div class="modal-footer-actions"><button class="btn" data-action="save-reposicao">Salvar reposição</button></div>');
     var input=document.getElementById('rep-name'); if(input) input.focus();
   }
 
   function applyReposicaoToSchedule(day, r){
     if(!state.schedule[day]) state.schedule[day]=emptyStructureFor(day);
     var n=slotCount(day);
-    (r.postIds||[]).forEach(function(pid,col){ if(pid && col<n && state.schedule[day][pid]) state.schedule[day][pid][col]='REP:'+r.id; });
+    (r.postIds||[]).forEach(function(pid,col){
+      if(!pid || col>=n || !state.schedule[day][pid])return;
+      var trainee=(r.traineeIds||[])[col];
+      if(trainee)Object.keys(state.schedule[day]).forEach(function(other){
+        if(state.schedule[day][other][col]===trainee)state.schedule[day][other][col]=null;
+      });
+      state.schedule[day][pid][col]='REP:'+r.id;
+    });
   }
 
   function removeReposicao(day,id){
@@ -2621,62 +2837,37 @@
   function reasonFor(e, post){
     var c = critCounts(e);
     var reasons = [];
-    if(e.postIds.length < 3) reasons.push('tem apenas '+e.postIds.length+' posto(s) — mínimo recomendado é 3');
+    reasons.push('conhece '+e.postIds.length+' posto(s)');
     if(post.criticidade==='verde' && c.amarelo>=2 && !c.verde) reasons.push('tem vários postos amarelos e nenhum verde — ajuda a equilibrar a carga');
     if(post.criticidade==='vermelho' && !c.vermelho) reasons.push('ainda não tem posto vermelho — ajuda a distribuir os postos mais pesados entre mais pessoas');
-    if(!reasons.length) reasons.push('boa opção para diversificar o quadro deste posto');
     return reasons.join('; ');
   }
-  function scoreCandidate(e, post){
-    var c = critCounts(e);
-    var score = 0;
-    score += Math.max(0, 3 - e.postIds.length) * 2;
-    if(post.criticidade==='vermelho'){ score += c.vermelho ? -3 : 4; }
-    if(post.criticidade==='verde' && c.amarelo>=2 && !c.verde){ score += 4; }
-    return score;
-  }
   function suggestionKey(employeeId, postId){ return employeeId+'::'+postId; }
+  function trainingPriorityGroup(post){
+    if(String(post.name).toUpperCase().indexOf('KIT')===0)return 2;
+    var setor=findSetor(post.setorId),name=setor?String(setor.name).trim().toUpperCase():'';
+    return name==='SC5'?0:name==='MOX'?1:2;
+  }
   function computeFormacaoSuggestions(){
-    var suggestions = [];
-    var suggestedEmployeeIds = {};
-    state.posts.forEach(function(post){
-      var effectiveQualified = state.employees.filter(function(e){
-        if(e.postIds.indexOf(post.id)===-1) return false;
-        if(e.restritoVerde && post.criticidade!=='verde') return false;
-        return true;
-      });
-      if(effectiveQualified.length < 6){
-        var need = 6 - effectiveQualified.length;
-        var candidates = state.employees.filter(function(e){
-          if(e.postIds.indexOf(post.id)!==-1) return false;
-          if(e.restritoVerde && post.criticidade!=='verde') return false;
-          return true;
-        });
-        candidates.forEach(function(e){ e._score = scoreCandidate(e, post); });
-        candidates.sort(function(a,b){ return b._score - a._score; });
-        candidates.slice(0, need).forEach(function(e){
-          suggestions.push({post:post, employee:e, reason: reasonFor(e, post)});
-          suggestedEmployeeIds[e.id] = true;
-        });
-      }
-    });
-    state.employees.filter(function(e){ return e.postIds.length<3 && !suggestedEmployeeIds[e.id]; }).forEach(function(e){
-      var notKnown = state.posts.filter(function(p){ return e.postIds.indexOf(p.id)===-1; });
-      if(e.restritoVerde) notKnown = notKnown.filter(function(p){ return p.criticidade==='verde'; });
-      var target = notKnown.filter(function(p){ return p.criticidade==='verde'; })[0] || notKnown[0];
-      if(target){
-        suggestions.push({post:target, employee:e, reason:'tem apenas '+e.postIds.length+' posto(s) — precisa de pelo menos 3'});
-      }
-    });
     var dismissedSet = {};
     (state.formacaoDismissed||[]).forEach(function(k){ dismissedSet[k]=true; });
-    suggestions = suggestions.filter(function(s){ return !dismissedSet[suggestionKey(s.employee.id, s.post.id)]; });
-    suggestions.sort(function(a,b){
-      var aPosts=a.employee.postIds.length, bPosts=b.employee.postIds.length;
-      if(aPosts!==bPosts) return aPosts-bPosts;
-      var aRed=critCounts(a.employee).vermelho, bRed=critCounts(b.employee).vermelho;
-      if(aRed!==bRed) return bRed-aRed;
-      return 0;
+    var rows=coverageByPost().sort(function(a,b){
+      return trainingPriorityGroup(a.post)-trainingPriorityGroup(b.post) || a.count-b.count ||
+        a.post.name.localeCompare(b.post.name,'pt-BR');
+    });
+    var suggestions=[];
+    rows.forEach(function(row){
+      var post=row.post,group=trainingPriorityGroup(post),target=group===0?8:6;
+      if(row.count>=target)return;
+      var candidates=state.employees.filter(function(e){return (e.postIds||[]).indexOf(post.id)===-1 &&
+        !(e.restritoVerde && post.criticidade!=='verde') && row.pendingIds.indexOf(e.id)===-1 &&
+        !dismissedSet[suggestionKey(e.id,post.id)];});
+      candidates.sort(function(a,b){return (a.postIds||[]).length-(b.postIds||[]).length ||
+        a.name.localeCompare(b.name,'pt-BR');});
+      candidates.slice(0,2).forEach(function(e){
+        suggestions.push({post:post,employee:e,group:group,count:row.count,target:target,
+          reason:reasonFor(e,post)});
+      });
     });
     return suggestions;
   }
@@ -2684,24 +2875,30 @@
     saveStateToLocalStorage();
     var label = document.getElementById('formacao-toggle-label');
     var all = computeFormacaoSuggestions();
-    var visible = all.slice(0, 6);
-    label.textContent = '💡 Sugestão de Formação ('+visible.length+(all.length>visible.length ? ' de '+all.length : '')+')';
+    label.textContent = '💡 Rota de formação ('+all.length+' sugestões)';
     var toggleBtn = document.getElementById('formacao-toggle-btn');
     toggleBtn.classList.toggle('open', formacaoSuggestionOpen);
     var container = document.getElementById('formacao-suggestion-content');
     container.classList.toggle('hidden', !formacaoSuggestionOpen);
-    if(!visible.length){ container.innerHTML = '<p class="empty-msg">Nenhuma sugestão no momento.</p>'; return; }
-    container.innerHTML = visible.map(function(s){
-      var key = suggestionKey(s.employee.id, s.post.id);
-      return '<div class="formacao-item">'+
+    if(!all.length){ container.innerHTML = '<p class="empty-msg">Nenhuma sugestão no momento. Revise metas e habilitações no cadastro.</p>'; return; }
+    var labels=['1 · SC5 — prioridade','2 · MOX','3 · KIT — depois das linhas'];
+    container.innerHTML='<p class="hint-small">Sugestões de planejamento, sem adicionar habilitação automaticamente. Confira aptidão, segurança e instrutor antes de iniciar.</p>'+
+      labels.map(function(title,group){
+        var items=all.filter(function(s){return s.group===group;});
+        return '<h3 class="hint-small" style="margin:14px 0 5px;">'+title+' ('+items.length+')</h3>'+
+          (items.length?items.map(function(s){
+            var key = suggestionKey(s.employee.id, s.post.id);
+            return '<div class="formacao-item">'+
         '<div class="formacao-item-main">'+
           '<span class="crit-dot crit-'+s.post.criticidade+'"></span>'+
           '<strong>'+escapeHtml(s.employee.name)+'</strong> → <span class="mono-tag">'+escapeHtml(s.post.name)+'</span>'+
-          '<div class="hint-small" style="margin:2px 0 0;">'+escapeHtml(s.reason)+'</div>'+
+          '<div class="hint-small" style="margin:2px 0 0;">'+s.count+' habilitado(s) / meta '+s.target+' · '+escapeHtml(s.reason)+'</div>'+
         '</div>'+
-        '<button class="suggestion-close" data-action="dismiss-suggestion" data-key="'+key+'" title="Fechar sugestão (já executada)">✕</button>'+
+        '<button type="button" class="btn ghost" data-action="plan-suggestion" data-emp="'+escapeHtml(s.employee.id)+'" data-post="'+escapeHtml(s.post.id)+'">Planejar</button>'+
+        '<button class="suggestion-close" data-action="dismiss-suggestion" data-key="'+escapeHtml(key)+'" title="Dispensar esta sugestão">✕</button>'+
       '</div>';
-    }).join('');
+          }).join(''):'<p class="hint-small">Nenhuma sugestão pendente neste grupo.</p>');
+      }).join('');
   }
   function renderFormacaoSelects(){
     saveStateToLocalStorage();
@@ -2768,6 +2965,7 @@
       var occ = resolveOccupant(sched[p.id][col]);
       if(occ) usedThisCol[occ] = true;
     });
+    (state.reposicoes[day]||[]).forEach(function(r){var trainee=(r.traineeIds||[])[col];if(trainee)usedThisCol[trainee]=true;});
     var currentVal = sched[postId][col];
     var samePostWorkers=(sched[postId]||[]).map(function(val,c){return c===col?null:resolveOccupant(val);});
     var qualified = state.employees.filter(function(e){ return e.postIds.indexOf(postId)!==-1; });
@@ -2901,7 +3099,8 @@
           var rep = findReposicao(currentDay, val.slice(4));
           ctx.fillStyle = rep && rep.type==='EMPRESTIMO' ? '#8b5cf6' : '#ffcc33';
           ctx.fillRect(cellX+2, rowY+2, colTurnoWidth-4, IMG_ROW_H-4);
-          text = rep ? rep.name : 'Ausente'; color = rep && rep.type==='EMPRESTIMO' ? '#ffffff' : '#5c4200'; font='700 11px "Inter", sans-serif';
+          var learner=rep && findEmployee((rep.traineeIds||[])[c]);
+          text = rep ? rep.name+(learner?'/'+learner.name+' formação':'') : 'Ausente'; color = rep && rep.type==='EMPRESTIMO' ? '#ffffff' : '#5c4200'; font='700 11px "Inter", sans-serif';
         } else if(typeof val==='string' && val.indexOf('FORM:')===0){
           var f = findFormacao(val.slice(5));
           ctx.fillStyle='#ffedd5';
@@ -3359,6 +3558,8 @@
     });
 
     document.getElementById('btn-gerar').addEventListener('click', function(){
+      var conflict=seniorCapacityConflict(currentDay);
+      if(conflict){showToast('Ajuste a cobertura: '+conflict+'.');return;}
       var leftover = generateForDay(currentDay);
       renderRodizio();
       if(leftover && leftover.length){
@@ -3369,8 +3570,13 @@
       }
     });
     document.getElementById('btn-gerar-semana').addEventListener('click', function(){
+      var conflict=DAYS.map(function(d){return seniorCapacityConflict(d.id);}).filter(Boolean)[0];
+      if(conflict){showToast('Ajuste a cobertura: '+conflict+'.');return;}
       var btn=this, old=btn.textContent; btn.disabled=true; btn.textContent='⏳ Otimizando semana...';
-      setTimeout(function(){ var left=generateBestWeek(); btn.disabled=false; btn.textContent=old; showToast('Semana otimizada · eficiência '+Math.round(weekMetrics().score)+'%'); if(left.length) console.warn('Sem encaixe:',left); },40);
+      setTimeout(function(){ var left=generateBestWeek(); btn.disabled=false; btn.textContent=old;
+        var gaps=DAYS.reduce(function(total,d){return total+state.posts.reduce(function(count,p){return count+(state.schedule[d.id][p.id]||[]).filter(function(v){return !v;}).length;},0);},0);
+        showToast(gaps?gaps+' vaga(s) sem operador na semana. Confira a escala.':'Semana otimizada · eficiência '+Math.round(weekMetrics().score)+'%');
+        if(left.length) console.warn('Sem encaixe:',left); },40);
     });
     document.getElementById('dashboard-post-search').addEventListener('input', renderDashboard);
     document.getElementById('coverage-search').addEventListener('input', renderCoverage);
@@ -3640,6 +3846,12 @@
         if(!state.formacaoDismissed) state.formacaoDismissed = [];
         if(state.formacaoDismissed.indexOf(key)===-1) state.formacaoDismissed.push(key);
         renderFormacaoSuggestions();
+      } else if(t.dataset.action==='plan-suggestion'){
+        var apprentice=document.getElementById('formacao-aprendiz');
+        var postSelect=document.getElementById('formacao-posto');
+        apprentice.value=t.dataset.emp;postSelect.value=t.dataset.post;
+        document.getElementById('form-formacao').scrollIntoView({behavior:'smooth',block:'start'});
+        showToast('Escolha o rodízio e um instrutor habilitado; confira a aptidão antes de registrar.');
       }
     });
     document.getElementById('page-formacao').addEventListener('change', function(e){
@@ -3814,7 +4026,10 @@
         var chosenEmployee=findEmployee(t.dataset.emp);
         if(!chosenEmployee || !selectedPost || chosenEmployee.postIds.indexOf(selectedPost.id)===-1){showToast('Operador não habilitado para este posto.');return;}
         if(chosenEmployee.restritoVerde && selectedPost.criticidade!=='verde'){showToast('Operador restrito a postos verdes.');return;}
-        if(state.posts.some(function(p){return p.id!==selectedPost.id && resolveOccupant((state.schedule[chosenDay][p.id]||[])[chosenCol])===chosenEmployee.id;})){showToast('Operador já está em outro posto neste rodízio.');return;}
+        if(state.posts.some(function(p){return p.id!==selectedPost.id && resolveOccupant((state.schedule[chosenDay][p.id]||[])[chosenCol])===chosenEmployee.id;}) ||
+          (state.reposicoes[chosenDay]||[]).some(function(r){return (r.traineeIds||[])[chosenCol]===chosenEmployee.id;})){
+          showToast('Operador já está em outro posto ou em formação neste rodízio.');return;
+        }
         if(!mayRepeatPostToday(chosenDay,chosenEmployee,selectedPost) && (state.schedule[chosenDay][t.dataset.post]||[]).some(function(val,c){return c!==chosenCol && resolveOccupant(val)===t.dataset.emp;})){showToast('Este operador já fez este posto hoje.');return;}
         if(selectedPost && selectedPost.criticidade==='vermelho' && !canAssignRedAtSlot(chosenDay,selectedPost.id,chosenCol,chosenEmployee.id)){ showToast('Segundo vermelho só no 3º rodízio, com verde no 2º e outro vermelho no 1º.'); return; }
         var chosen=findEmployee(t.dataset.emp);
@@ -3829,9 +4044,14 @@
         closeModal(); renderRodizioGrids();
       } else if(action==='save-reposicao'){
         var type=document.getElementById('rep-type').value;
+        var seniorSector=document.getElementById('rep-sector').value;
         var name=document.getElementById('rep-name').value.trim();
-        var nrep=slotCount(currentDay), postIds=[];
-        for(var rc=0;rc<3;rc++){ var sel=document.getElementById('rep-post-'+rc); postIds.push(sel && rc<nrep ? sel.value : ''); }
+        var nrep=slotCount(currentDay), postIds=[],traineeIds=[];
+        for(var rc=0;rc<3;rc++){
+          var sel=document.getElementById('rep-post-'+rc),traineeSel=document.getElementById('rep-trainee-'+rc);
+          postIds.push(sel && rc<nrep ? sel.value : '');
+          traineeIds.push(type==='SENIOR' && traineeSel && rc<nrep ? traineeSel.value : '');
+        }
         if(!name){ showToast('Informe o nome da reposição.'); return; }
         var registered=state.employees.filter(function(e){return e.name.toLocaleLowerCase('pt-BR')===name.toLocaleLowerCase('pt-BR');})[0];
         if(registered && absenceSetFor(currentDay)[registered.id]){showToast('Esse operador está ausente ou afastado neste dia.');return;}
@@ -3842,6 +4062,27 @@
           showToast('Essa pessoa fez o mesmo posto vermelho no dia anterior ou seguinte.'); return;
         }
         if(!postIds.some(Boolean)){ showToast('Selecione ao menos um posto para a reposição.'); return; }
+        if(traineeIds.some(function(id,col){return id && !postIds[col];})){
+          showToast('Escolha o posto do aprendiz em cada rodízio.');return;
+        }
+        if(traineeIds.some(function(id,col){return id && (absenceSetFor(currentDay)[id] ||
+          state.formacoes.some(function(f){return currentDay!=='sabado' && f.col===col && (f.traineeId===id || f.trainerId===id);}) ||
+          (state.reposicoes[currentDay]||[]).some(function(r){return !!(r.traineeIds||[])[col] && (r.traineeIds||[])[col]===id;}));})){
+          showToast('Aprendiz ausente ou já ocupado neste rodízio.');return;
+        }
+        if(type==='SENIOR' && postIds.some(function(pid){return pid && !seniorCanCover(seniorSector,findPost(pid));})){
+          showToast(seniorSector==='SC5'?'Sênior SC5 não faz 7E nem postos MOX.':'Sênior MOX não faz 01A, 12D nem postos SC5.');return;
+        }
+        if(type==='SENIOR' && (state.reposicoes[currentDay]||[]).some(function(r){return r.type==='SENIOR' && seniorSectorFor(r)===seniorSector &&
+          r.name.trim().toLocaleLowerCase('pt-BR')!==name.toLocaleLowerCase('pt-BR');})){
+          showToast('Já existe um Sênior deste setor no dia. Use o mesmo nome para outros rodízios.');return;
+        }
+        if(type==='SENIOR' && postIds.some(function(pid,col){return pid && seniorCoverageCount(currentDay,col)>=1;})){
+          showToast('Um Sênior já cobre posto nesse rodízio. O outro precisa ficar livre para testes, retoques e apoio.'); return;
+        }
+        var samePerson=(state.reposicoes[currentDay]||[]).some(function(r){return r.name.trim().toLocaleLowerCase('pt-BR')===name.toLocaleLowerCase('pt-BR') &&
+          postIds.some(function(pid,col){return pid && !!(r.postIds||[])[col];});});
+        if(samePerson){showToast('Essa pessoa já faz reposição no mesmo rodízio.');return;}
         var conflict=null;
         postIds.forEach(function(pid,col){
           if(!pid || conflict) return;
@@ -3850,7 +4091,7 @@
           if(existing || form) conflict=(col+1)+'º rodízio · '+(findPost(pid)?findPost(pid).name:'posto');
         });
         if(conflict){ showToast('Já existe uma vaga travada em '+conflict+'.'); return; }
-        var rep={id:uid('r'), type:type, name:name, postIds:postIds};
+        var rep={id:uid('r'), type:type, name:name, postIds:postIds,traineeIds:traineeIds,seniorSector:type==='SENIOR'?seniorSector:''};
         if(!state.reposicoes[currentDay]) state.reposicoes[currentDay]=[];
         state.reposicoes[currentDay].push(rep);
         applyReposicaoToSchedule(currentDay,rep);
